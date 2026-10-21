@@ -1,7 +1,7 @@
 from django import forms
 
 from .importer import SUFFIXES
-from .models import Article, Person
+from .models import Article, ClubItem, Payout, Person, Sale
 
 
 class ArticleForm(forms.ModelForm):
@@ -71,3 +71,42 @@ class ImportUploadForm(forms.Form):
         if not file.name.lower().endswith(SUFFIXES):
             raise forms.ValidationError("Bitte eine Numbers-, Excel- oder CSV-Datei wählen.")
         return file
+
+
+class OtherItemForm(forms.Form):
+    """Posten ohne Nummer: eigene Kleider, Evas Artikel, Diverses."""
+
+    description = forms.CharField(label="Bezeichnung", max_length=300)
+    size = forms.CharField(label="Grösse", max_length=60, required=False)
+    price = forms.DecimalField(label="Preis (CHF)", min_value=0, max_digits=8, decimal_places=2)
+    owner = forms.ModelChoiceField(
+        label="Gehört", queryset=Person.objects.all(), required=False, empty_label="mir (eigener Artikel)"
+    )
+
+
+class ClubSaleForm(forms.Form):
+    club_item = forms.ModelChoiceField(label="Clubartikel", queryset=ClubItem.objects.all(), empty_label=None)
+    size = forms.CharField(label="Grösse", max_length=30, required=False)
+    price = forms.DecimalField(label="Preis (CHF)", min_value=0, max_digits=8, decimal_places=2, required=False,
+                               help_text="Leer = Preis aus der Liste")
+
+
+class CheckoutForm(forms.Form):
+    buyer = forms.ModelChoiceField(label="Käuferin", queryset=Person.objects.all(), required=False,
+                                   empty_label="– ohne –")
+    new_buyer = forms.CharField(label="oder neue Käuferin", max_length=200, required=False,
+                                widget=forms.TextInput(attrs={"placeholder": "Nachname Vorname"}))
+    payment = forms.ChoiceField(label="Bezahlt mit", choices=Sale.Payment.choices, initial=Sale.Payment.CASH,
+                                widget=forms.RadioSelect)
+    date = forms.DateField(label="Datum", widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
+
+
+class PayoutForm(forms.Form):
+    method = forms.ChoiceField(label="Art", choices=Payout.Method.choices)
+    date = forms.DateField(label="Datum", required=False)
+
+
+class ClubItemForm(forms.ModelForm):
+    class Meta:
+        model = ClubItem
+        fields = ["name", "size", "customer_price", "club_price", "stock"]

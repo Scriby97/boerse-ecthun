@@ -17,6 +17,8 @@ class AppSettings(models.Model):
         "Anteil Besitzerin (%)", max_digits=5, decimal_places=2, default=Decimal("65")
     )
     receipt_thanks = models.TextField("Dankestext auf der Quittung", default=RECEIPT_THANKS)
+    owner_name = models.CharField("Name auf Quittungen", max_length=120, default="Stephanie Luginbühl")
+    place = models.CharField("Ort", max_length=80, default="Höfen")
 
     class Meta:
         verbose_name = "Einstellungen"
@@ -116,6 +118,9 @@ class Article(models.Model):
     buyer = models.ForeignKey(
         Person, models.SET_NULL, null=True, blank=True, related_name="purchases", verbose_name="Käuferin"
     )
+    payout = models.ForeignKey(
+        "Payout", models.SET_NULL, null=True, blank=True, related_name="articles", verbose_name="Auszahlung"
+    )
     notes = models.TextField("Notizen", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -154,3 +159,109 @@ class Article(models.Model):
 
     def split_for(self, price: Decimal, settings: AppSettings | None = None) -> tuple[Decimal, Decimal]:
         return split(price, self.effective_owner_share(settings))
+
+
+class ClubItem(models.Model):
+    """Clubbekleidung EC Thun mit Bestand; der Club erhält pro Stück seinen Preis."""
+
+    name = models.CharField("Bezeichnung", max_length=120)
+    size = models.CharField("Grösse", max_length=30, blank=True)
+    customer_price = models.DecimalField("Preis Kunde (CHF)", max_digits=8, decimal_places=2)
+    club_price = models.DecimalField("an den Club (CHF)", max_digits=8, decimal_places=2)
+    stock = models.IntegerField("Bestand", default=0)
+
+    class Meta:
+        ordering = ["name", "size"]
+        verbose_name = "Clubartikel"
+        verbose_name_plural = "Clubartikel"
+
+    def __str__(self):
+        return f"{self.name} {self.size}".strip()
+
+
+class Payout(models.Model):
+    """Auszahlung an eine Besitzerin für einen oder mehrere verkaufte Artikel."""
+
+    class Method(models.TextChoices):
+        TWINT = "twint", "TWINT"
+        CASH = "bar", "bar"
+        BANK = "bank", "Banküberweisung"
+
+    person = models.ForeignKey(Person, models.PROTECT, related_name="payouts", verbose_name="Besitzerin")
+    date = models.DateField("Datum", default=timezone.localdate)
+    amount = models.DecimalField("Betrag (CHF)", max_digits=9, decimal_places=2)
+    method = models.CharField("Art", max_length=10, choices=Method.choices)
+    note = models.CharField("Notiz", max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-date", "-created_at"]
+        verbose_name = "Auszahlung"
+        verbose_name_plural = "Auszahlungen"
+
+    def __str__(self):
+        return f"{self.person} {self.amount} ({self.get_method_display()})"
+
+
+class Sale(models.Model):
+    """Ein Einkauf an der Kasse = eine Quittung."""
+
+    class Payment(models.TextChoices):
+        CASH = "bar", "bar"
+        TWINT = "twint", "TWINT"
+
+    number = models.PositiveIntegerField("Quittung Nr.", unique=True)
+    date = models.DateField("Datum", default=timezone.localdate)
+    buyer = models.ForeignKey(
+        Person, models.SET_NULL, null=True, blank=True, related_name="sales", verbose_name="Käuferin"
+    )
+    payment = models.CharField("Bezahlt mit", max_length=10, choices=Payment.choices, default=Payment.CASH)
+    cancelled_at = models.DateTimeField("Storniert am", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-number"]
+        verbose_name = "Verkauf"
+        verbose_name_plural = "Verkäufe"
+
+    def __str__(self):
+        return f"Quittung {self.number}"
+
+    @classmethod
+    def next_number(cls) -> int:
+        return (cls.objects.aggregate(m=Max("number"))["m"] or 0) + 1
+
+    @property
+    def total(self) -> Decimal:
+        return sum((item.price for item in self.items.all()), Decimal("0"))
+
+
+class SaleItem(models.Model):
+    """Ein Posten auf der Quittung mit der Aufteilung des Betrags."""
+
+    class Kind(models.TextChoices):
+        ARTICLE = "artikel", "Kommission"
+        OTHER = "ohne_nummer", "ohne Nummer"
+        OWN = "eigen", "eigener Artikel"
+        CLUB = "club", "Clubartikel"
+
+    sale = models.ForeignKey(Sale, models.CASCADE, related_name="items")
+    kind = models.CharField("Art", max_length=12, choices=Kind.choices)
+    article = models.ForeignKey(Article, models.PROTECT, null=True, blank=True, related_name="sale_items")
+    club_item = models.ForeignKey(ClubItem, models.PROTECT, null=True, blank=True, related_name="sale_items")
+    owner = models.ForeignKey(Person, models.PROTECT, null=True, blank=True, related_name="sale_items")
+    description = models.CharField("Bezeichnung", max_length=300)
+    size = models.CharField("Grösse", max_length=60, blank=True)
+    price = models.DecimalField("Preis", max_digits=8, decimal_places=2)
+    owner_amount = models.DecimalField("Anteil Besitzerin", max_digits=8, decimal_places=2, default=Decimal("0"))
+    shop_amount = models.DecimalField("Anteil Börse", max_digits=8, decimal_places=2, default=Decimal("0"))
+    club_amount = models.DecimalField("an den Club", max_digits=8, decimal_places=2, default=Decimal("0"))
+    payout = models.ForeignKey(Payout, models.SET_NULL, null=True, blank=True, related_name="sale_items")
+
+    class Meta:
+        ordering = ["pk"]
+        verbose_name = "Posten"
+        verbose_name_plural = "Posten"
+
+    def __str__(self):
+        return f"{self.description} {self.price}"

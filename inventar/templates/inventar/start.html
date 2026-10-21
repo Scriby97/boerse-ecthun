@@ -4,13 +4,17 @@
 <h1>Guten Tag, Stephanie</h1>
 
 <section class="stats">
+  <a class="stat stat-main" href="{% url 'kasse' %}">
+    <span class="stat-value">Kasse</span>
+    <span class="stat-label">heute {{ today_count }} Verkäufe · CHF {{ today_sum|chf }}</span>
+  </a>
   <a class="stat" href="{% url 'article_list' %}">
     <span class="stat-value">{{ stock_count }}</span>
     <span class="stat-label">Artikel an Lager · CHF {{ stock_value|chf }}</span>
   </a>
-  <a class="stat" href="{% url 'article_list' %}?status=verkauft">
+  <a class="stat" href="{% url 'payout_list' %}">
     <span class="stat-value">{{ open_payout_count }}</span>
-    <span class="stat-label">offen auszuzahlen · CHF {{ open_payout_sum|chf }}</span>
+    <span class="stat-label">Besitzerinnen offen auszuzahlen · CHF {{ open_payout_sum|chf }}</span>
   </a>
   <a class="stat" href="{% url 'person_list' %}">
     <span class="stat-value">{{ person_count }}</span>

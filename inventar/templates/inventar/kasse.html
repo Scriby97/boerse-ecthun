@@ -1,0 +1,105 @@
+{% extends "inventar/base.html" %}
+{% load boerse %}
+{% block title %}Kasse – Börse EC Thun{% endblock %}
+{% block content %}
+<h1>Kasse</h1>
+
+<div class="kasse">
+  <section class="kasse-input">
+    <form method="post" action="{% url 'kasse_add_number' %}" class="number-form">
+      {% csrf_token %}
+      <label for="nummer">Artikelnummer</label>
+      <div class="number-row">
+        <input id="nummer" name="nummer" inputmode="numeric" autocomplete="off" placeholder="z. B. 10234" autofocus>
+        <button type="submit" class="primary">Hinzufügen</button>
+      </div>
+    </form>
+
+    {% if choices %}
+      <div class="choices">
+        <p>Diese Nummer gibt es mehrfach. Welcher Artikel?</p>
+        {% for c in choices %}
+          <form method="post" action="{% url 'kasse_add_article' c.article_id %}">
+            {% csrf_token %}
+            <button type="submit" class="choice-button"><strong>{{ c.label }}</strong> {{ c.description }} · {{ c.size }} · {{ c.owner }} · CHF {{ c.price|chf }}</button>
+          </form>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <details class="extra">
+      <summary>+ Artikel ohne Nummer</summary>
+      <form method="post" action="{% url 'kasse_add_other' %}" class="inline-grid">
+        {% csrf_token %}
+        {% for field in other_form %}
+          <div class="field field-{{ field.name }}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>
+        {% endfor %}
+        <button type="submit">In den Warenkorb</button>
+      </form>
+    </details>
+
+    <details class="extra">
+      <summary>+ Clubartikel</summary>
+      <form method="post" action="{% url 'kasse_add_club' %}" class="inline-grid">
+        {% csrf_token %}
+        {% for field in club_form %}
+          <div class="field field-{{ field.name }}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}</div>
+        {% endfor %}
+        <button type="submit">In den Warenkorb</button>
+      </form>
+    </details>
+  </section>
+
+  <section class="kasse-cart">
+    <h2>Warenkorb</h2>
+    {% if entries %}
+      <table class="table cart">
+        <thead><tr><th>Nr.</th><th>Artikel</th><th>Grösse</th><th class="num">CHF</th><th></th></tr></thead>
+        <tbody>
+          {% for e in entries %}
+            <tr>
+              <td>{{ e.label|default:"–" }}</td>
+              <td>{{ e.description }}<br><small>{{ e.owner }}{% if e.note %} · {{ e.note }}{% endif %}</small></td>
+              <td>{{ e.size }}</td>
+              <td class="num">
+                <form method="post" action="{% url 'kasse_price' forloop.counter0 %}">
+                  {% csrf_token %}
+                  <input class="price-input" name="price" value="{{ e.price }}" inputmode="decimal" aria-label="Preis {{ e.description }}" onchange="this.form.submit()">
+                </form>
+              </td>
+              <td>
+                <form method="post" action="{% url 'kasse_remove' forloop.counter0 %}">
+                  {% csrf_token %}
+                  <button type="submit" class="link-button" aria-label="{{ e.description }} entfernen">entfernen</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><th colspan="3">Total</th><th class="num total">CHF {{ total|chf }}</th><th></th></tr>
+        </tfoot>
+      </table>
+
+      <form method="post" action="{% url 'kasse_checkout' %}" class="checkout">
+        {% csrf_token %}
+        <div class="inline-grid">
+          <div class="field"><label for="{{ checkout_form.buyer.id_for_label }}">{{ checkout_form.buyer.label }}</label>{{ checkout_form.buyer }}</div>
+          <div class="field"><label for="{{ checkout_form.new_buyer.id_for_label }}">{{ checkout_form.new_buyer.label }}</label>{{ checkout_form.new_buyer }}</div>
+          <div class="field"><label for="{{ checkout_form.date.id_for_label }}">{{ checkout_form.date.label }}</label>{{ checkout_form.date }}</div>
+          <fieldset class="field radios"><legend>{{ checkout_form.payment.label }}</legend>{% for radio in checkout_form.payment %}{{ radio }}{% endfor %}</fieldset>
+        </div>
+        <div class="actions">
+          <button type="submit" class="primary big">Verkauft · CHF {{ total|chf }}</button>
+        </div>
+      </form>
+      <form method="post" action="{% url 'kasse_clear' %}">
+        {% csrf_token %}
+        <button type="submit" class="link-button">Warenkorb leeren</button>
+      </form>
+    {% else %}
+      <p class="muted">Noch leer. Nummer eingeben und Enter drücken.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "inventar/base.html" %}
+{% load boerse %}
+{% block title %}Abrechnen – Börse EC Thun{% endblock %}
+{% block content %}
+<h1>Abrechnen</h1>
+
+<h2>Offen auszuzahlen · CHF {{ open_total|chf }}</h2>
+<table class="table">
+  <thead><tr><th>Besitzerin</th><th>Kontakt</th><th class="num">offen</th><th>Auszahlen per</th></tr></thead>
+  <tbody>
+    {% for row in open_rows %}
+      <tr>
+        <td><a href="{% url 'person_detail' row.person.pk %}">{{ row.person.name }}</a></td>
+        <td>{{ row.person.phone }}{% if row.person.twint %} · TWINT{% endif %}{% if row.person.iban %} · IBAN{% endif %}</td>
+        <td class="num">{{ row.amount|chf }}</td>
+        <td>
+          <form method="post" action="{% url 'payout_person' row.person.pk %}" class="payout-buttons compact">
+            {% csrf_token %}
+            {% for value, label in form.method.field.choices %}<button type="submit" name="method" value="{{ value }}">{{ label }}</button>{% endfor %}
+          </form>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4" class="muted">Alles ausbezahlt.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Letzte Auszahlungen</h2>
+<table class="table">
+  <thead><tr><th>Datum</th><th>Besitzerin</th><th>Art</th><th class="num">CHF</th></tr></thead>
+  <tbody>
+    {% for p in payouts %}
+      <tr><td>{{ p.date|date:"j.n.Y" }}</td><td><a href="{% url 'person_detail' p.person.pk %}">{{ p.person.name }}</a></td><td>{{ p.get_method_display }}</td><td class="num">{{ p.amount|chf }}</td></tr>
+    {% empty %}
+      <tr><td colspan="4" class="muted">Noch keine Auszahlungen in der App.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

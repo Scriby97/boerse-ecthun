@@ -21,6 +21,26 @@
   <div class="stat"><span class="stat-value">{{ open_payout|default:0|chf }}</span><span class="stat-label">CHF offen auszuzahlen</span></div>
   <div class="stat"><span class="stat-value">{{ paid_total|default:0|chf }}</span><span class="stat-label">CHF bereits ausbezahlt</span></div>
 </section>
+{% if open_payout %}
+  <form method="post" action="{% url 'payout_person' person.pk %}" class="payout-buttons">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}">
+    <span>CHF {{ open_payout|chf }} auszahlen per</span>
+    {% for value, label in methods %}<button type="submit" name="method" value="{{ value }}">{{ label }}</button>{% endfor %}
+  </form>
+{% endif %}
+
+{% if open_items %}
+<h2>Offene Posten ohne Nummer</h2>
+<table class="table">
+  <thead><tr><th>Datum</th><th>Bezeichnung</th><th class="num">CHF</th><th class="num">Anteil</th></tr></thead>
+  <tbody>
+    {% for i in open_items %}
+      <tr><td><a href="{% url 'sale_detail' i.sale_id %}">{{ i.sale.date|date:"j.n.Y" }}</a></td><td>{{ i.description }}</td><td class="num">{{ i.price|chf }}</td><td class="num">{{ i.owner_amount|chf }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 
 <h2>Eingebrachte Artikel ({{ articles|length }})</h2>
 <table class="table">
@@ -42,8 +62,30 @@
   </tbody>
 </table>
 
+{% if sales %}
+<h2>Einkäufe</h2>
+<table class="table">
+  <thead><tr><th>Quittung</th><th>Datum</th><th>Posten</th><th class="num">CHF</th></tr></thead>
+  <tbody>
+    {% for s in sales %}
+      <tr><td><a href="{% url 'sale_detail' s.pk %}">Nr. {{ s.number }}</a>{% if s.cancelled_at %} <span class="badge">storniert</span>{% endif %}</td><td>{{ s.date|date:"j.n.Y" }}</td><td>{{ s.items.all|length }}</td><td class="num">{{ s.total|chf }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if payouts %}
+<h2>Auszahlungen</h2>
+<table class="table">
+  <thead><tr><th>Datum</th><th>Art</th><th class="num">CHF</th></tr></thead>
+  <tbody>
+    {% for p in payouts %}<tr><td>{{ p.date|date:"j.n.Y" }}</td><td>{{ p.get_method_display }}</td><td class="num">{{ p.amount|chf }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
 {% if purchases %}
-<h2>Gekauft</h2>
+<h2>Gekauft (alte Liste)</h2>
 <table class="table">
   <thead><tr><th>Nr.</th><th>Bezeichnung</th><th>Datum</th><th class="num">CHF</th></tr></thead>
   <tbody>

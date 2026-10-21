@@ -1,0 +1,55 @@
+{% extends "inventar/base.html" %}
+{% load boerse %}
+{% block title %}Quittung {{ sale.number }} – Börse EC Thun{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Quittung Nr. {{ sale.number }}{% if sale.cancelled_at %} <span class="badge">storniert</span>{% endif %}</h1>
+  <a class="button primary" href="{% url 'sale_receipt' sale.pk %}">Quittung als PDF</a>
+  <a class="button" href="{% url 'kasse' %}">Neuer Verkauf</a>
+</div>
+<p class="muted">
+  {{ sale.date|date:"j.n.Y" }} · bezahlt mit {{ sale.get_payment_display }}
+  {% if sale.buyer %} · Käuferin <a href="{% url 'person_detail' sale.buyer.pk %}">{{ sale.buyer.name }}</a>{% endif %}
+</p>
+
+{% if to_pay %}
+  <section class="card payout-now">
+    <h2>Jetzt auszahlen</h2>
+    {% for row in to_pay %}
+      <form method="post" action="{% url 'sale_payout' sale.pk %}" class="payout-buttons">
+        {% csrf_token %}
+        <input type="hidden" name="person" value="{{ row.person.pk }}">
+        <span><strong>{{ row.person.name }}</strong>: CHF {{ row.amount|chf }}{% if row.person.twint %} · hat TWINT{% endif %}</span>
+        {% for value, label in methods %}<button type="submit" name="method" value="{{ value }}">{{ label }}</button>{% endfor %}
+      </form>
+    {% endfor %}
+    <p class="muted">Wer nicht sofort ausbezahlt wird, erscheint unter «Abrechnen».</p>
+  </section>
+{% endif %}
+
+<table class="table">
+  <thead><tr><th>Nr.</th><th>Artikel</th><th>Grösse</th><th>Art</th><th class="num">CHF</th><th class="num">Besitzerin</th><th class="num">Börse</th><th class="num">Club</th></tr></thead>
+  <tbody>
+    {% for i in items %}
+      <tr>
+        <td>{% if i.article %}<a href="{% url 'article_edit' i.article.pk %}">{{ i.article.label }}</a>{% endif %}</td>
+        <td>{{ i.description }}{% if i.owner %}<br><small>{{ i.owner.name }}{% if i.payout %} · ausbezahlt {{ i.payout.date|date:"j.n.Y" }}{% endif %}</small>{% endif %}</td>
+        <td>{{ i.size }}</td>
+        <td>{{ i.get_kind_display }}</td>
+        <td class="num">{{ i.price|chf }}</td>
+        <td class="num">{% if i.owner %}{{ i.owner_amount|chf }}{% endif %}</td>
+        <td class="num">{{ i.shop_amount|chf }}</td>
+        <td class="num">{% if i.club_amount %}{{ i.club_amount|chf }}{% endif %}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot><tr><th colspan="4">Total</th><th class="num">{{ sale.total|chf }}</th><th colspan="3"></th></tr></tfoot>
+</table>
+
+{% if not sale.cancelled_at %}
+  <form method="post" action="{% url 'sale_cancel' sale.pk %}" class="danger-zone" onsubmit="return confirm('Verkauf wirklich stornieren? Die Artikel kommen wieder an Lager.')">
+    {% csrf_token %}
+    <button type="submit" class="link-button danger">Verkauf stornieren</button>
+  </form>
+{% endif %}
+{% endblock %}

@@ -9,12 +9,13 @@ from django.contrib import messages
 from django.db.models import Count, Q, Sum
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from . import importer
+from . import importer, sales
 from .backup import backup_database
 from .forms import ArticleForm, ImportUploadForm, PersonForm
-from .models import Article, Category, Person
+from .models import Article, Category, Payout, Person, Sale
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +25,8 @@ def start(request):
         in_stock=Count("articles", filter=Q(articles__status=Article.Status.STOCK))
     )
     stock = Article.objects.filter(status=Article.Status.STOCK)
-    open_payouts = Article.objects.filter(status=Article.Status.SOLD)
+    open_amounts = sales.open_amounts()
+    today = Sale.objects.filter(date=timezone.localdate(), cancelled_at__isnull=True)
     return render(
         request,
         "inventar/start.html",
@@ -32,8 +34,10 @@ def start(request):
             "categories": categories,
             "stock_count": stock.count(),
             "stock_value": stock.aggregate(s=Sum("price"))["s"] or Decimal("0"),
-            "open_payout_count": open_payouts.count(),
-            "open_payout_sum": open_payouts.aggregate(s=Sum("owner_amount"))["s"] or Decimal("0"),
+            "open_payout_count": len(open_amounts),
+            "open_payout_sum": sum(open_amounts.values(), Decimal("0")),
+            "today_count": today.count(),
+            "today_sum": sum((s.total for s in today.prefetch_related("items")), Decimal("0")),
             "person_count": Person.objects.count(),
         },
     )
@@ -125,12 +129,15 @@ def person_list(request):
     persons = Person.objects.annotate(
         in_stock=Count("articles", filter=Q(articles__status=Article.Status.STOCK)),
         sold=Count("articles", filter=Q(articles__status__in=[Article.Status.SOLD, Article.Status.PAID])),
-        open_payout=Sum("articles__owner_amount", filter=Q(articles__status=Article.Status.SOLD)),
     )
     if q:
         persons = persons.filter(
             Q(name__icontains=q) | Q(phone__icontains=q) | Q(email__icontains=q) | Q(notes__icontains=q)
         )
+    open_amounts = sales.open_amounts()
+    persons = list(persons)
+    for p in persons:
+        p.open_payout = open_amounts.get(p.pk)
     return render(request, "inventar/person_list.html", {"persons": persons, "q": q})
 
 
@@ -143,9 +150,15 @@ def person_detail(request, pk):
         {
             "person": person,
             "articles": articles,
-            "purchases": person.purchases.select_related("category"),
-            "open_payout": articles.filter(status=Article.Status.SOLD).aggregate(s=Sum("owner_amount"))["s"],
-            "paid_total": articles.filter(status=Article.Status.PAID).aggregate(s=Sum("owner_amount"))["s"],
+            "purchases": person.purchases.filter(sale_items__isnull=True).select_related("category"),
+            "sales": person.sales.prefetch_related("items"),
+            "open_items": sales.open_sale_items().filter(owner=person).exclude(kind="artikel").select_related("sale"),
+            "open_payout": sales.open_amounts().get(person.pk),
+            "paid_total": (person.payouts.aggregate(s=Sum("amount"))["s"] or Decimal("0"))
+            + (articles.filter(status=Article.Status.PAID, payout__isnull=True).aggregate(s=Sum("owner_amount"))["s"]
+               or Decimal("0")),
+            "payouts": person.payouts.all(),
+            "methods": Payout.Method.choices,
         },
     )
 
@@ -178,6 +191,10 @@ def _result_file(token: str) -> Path:
 
 @require_http_methods(["GET", "POST"])
 def import_upload(request):
+    try:
+        importer.ensure_import_allowed()
+    except importer.ImportFehler as error:
+        return render(request, "inventar/import_upload.html", {"blocked": str(error)})
     form = ImportUploadForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
         upload = form.cleaned_data["file"]
@@ -213,6 +230,11 @@ def import_preview(request, token):
     result = json.loads(file.read_text(encoding="utf-8"))
     if request.method == "POST":
         decisions = {i["id"]: request.POST.get(i["id"], "") for i in result["issues"]}
+        try:
+            importer.ensure_import_allowed()
+        except importer.ImportFehler as error:
+            messages.error(request, str(error))
+            return redirect("import_upload")
         backup = backup_database("vor-import")
         stats = importer.apply(result, decisions)
         file.unlink(missing_ok=True)

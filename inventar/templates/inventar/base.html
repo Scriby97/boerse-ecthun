@@ -12,11 +12,12 @@
     {% with name=request.resolver_match.url_name %}
     <a href="{% url 'start' %}" {% if name == 'start' %}aria-current="page"{% endif %}>Start</a>
     <a href="{% url 'article_create' %}" {% if name == 'article_create' %}aria-current="page"{% endif %}>Erfassen</a>
-    <span class="soon" title="Kommt in Phase 2">Kasse</span>
+    <a href="{% url 'kasse' %}" {% if 'kasse' in name or name == 'sale_detail' %}aria-current="page"{% endif %}>Kasse</a>
     <a href="{% url 'article_list' %}" {% if name == 'article_list' or name == 'article_edit' %}aria-current="page"{% endif %}>Inventar</a>
-    <span class="soon" title="Kommt in Phase 2">Verkauft</span>
-    <span class="soon" title="Kommt in Phase 2">Abrechnen</span>
+    <a href="{% url 'sale_list' %}" {% if name == 'sale_list' %}aria-current="page"{% endif %}>Verkauft</a>
+    <a href="{% url 'payout_list' %}" {% if 'payout' in name %}aria-current="page"{% endif %}>Abrechnen</a>
     <a href="{% url 'person_list' %}" {% if 'person' in name %}aria-current="page"{% endif %}>Kunden</a>
+    <a href="{% url 'club_items' %}" {% if 'club' in name %}aria-current="page"{% endif %}>Club EC Thun</a>
     <a class="secondary" href="{% url 'import_upload' %}" {% if 'import' in name %}aria-current="page"{% endif %}>Import</a>
     {% endwith %}
   </nav>

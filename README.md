@@ -36,6 +36,9 @@ Wie die fertige App starten: `pip install -r requirements-desktop.txt`, dann `py
 - `inventar/importer.py` – Import: lesen → prüfen (Vorschau, nichts gespeichert) → übernehmen
 - `inventar/money.py` – Aufteilung Besitzerin/Börse (Standard 65/35, auf 5 Rappen)
 - `inventar/backup.py` – Sicherung der Datenbank (vor jedem Import)
+- `inventar/sales.py` – Kasse: Verkauf anlegen/stornieren, offene Beträge, Auszahlungen
+- `inventar/reports.py` – Verkauft-Übersicht pro Woche, Monat, Jahr
+- `inventar/pdf.py` – Kaufquittung als PDF (fpdf2, Logo in `inventar/assets/`)
 - `app.py` – Start der fertigen App
 
 ## Stand
@@ -43,4 +46,10 @@ Wie die fertige App starten: `pip install -r requirements-desktop.txt`, dann `py
 Phase 1 (Import und Inventar): Kategorien, Erfassen mit Nummernvorschlag und Serienerfassung, Inventar mit Suche,
 Kundendatei, Import mit Vorschau und Prüfliste, Sicherung vor dem Import.
 
-Als Nächstes (Phase 2): Kasse, Quittung als PDF, Verkauft-Liste, Auszahlungen.
+Phase 2 (Kasse und Verkauf): Kasse mit Nummerneingabe (fragt bei 1096/1096+ nach), Artikel ohne Nummer
+(eigene oder einer Besitzerin wie Eva), Clubartikel mit Bestand, Preis an der Kasse änderbar, Quittung als PDF,
+Storno, Auszahlung direkt nach dem Verkauf oder gesammelt unter «Abrechnen», Verkauft-Übersicht.
+Der Import ist gesperrt, sobald es Verkäufe oder Auszahlungen gibt.
+
+Als Nächstes (Phase 3): Clubabrechnung EC Thun (30.6./31.12.), Abrechnung pro Besitzerin als PDF,
+Etiketten für DYMO, Excel-Export, automatische Sicherung (inkl. iCloud).

@@ -1,0 +1,78 @@
+{% extends "inventar/base.html" %}
+{% load boerse %}
+{% block title %}Verkauft – Börse EC Thun{% endblock %}
+{% block content %}
+<h1>Verkauft</h1>
+
+<nav class="tabs" aria-label="Zeitraum">
+  {% for value, label in periods.items %}
+    <a href="?periode={{ value }}" {% if value == period %}aria-current="page"{% endif %}>pro {{ label }}</a>
+  {% endfor %}
+</nav>
+
+<table class="table">
+  <thead>
+    <tr><th>Zeitraum</th><th class="num">Posten</th><th class="num">Umsatz</th><th class="num">an Besitzerinnen</th><th class="num">Börse</th><th class="num">davon eigene</th><th class="num">an Club</th></tr>
+  </thead>
+  <tbody>
+    {% for g in groups %}
+      <tr {% if selected and g.key == selected.key %}class="selected"{% endif %}>
+        <td><a href="?periode={{ period }}&zeitraum={{ g.key }}">{{ g.title }}</a></td>
+        <td class="num">{{ g.count }}</td>
+        <td class="num">{{ g.revenue|chf }}</td>
+        <td class="num">{{ g.owners|chf }}</td>
+        <td class="num">{{ g.shop|chf }}</td>
+        <td class="num">{{ g.own|chf }}</td>
+        <td class="num">{{ g.club|chf }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7" class="muted">Noch keine Verkäufe.</td></tr>
+    {% endfor %}
+  </tbody>
+  {% if groups %}
+  <tfoot>
+    <tr><th>Total</th><th class="num">{{ total.count }}</th><th class="num">{{ total.revenue|chf }}</th><th class="num">{{ total.owners|chf }}</th><th class="num">{{ total.shop|chf }}</th><th class="num">{{ total.own|chf }}</th><th class="num">{{ total.club|chf }}</th></tr>
+  </tfoot>
+  {% endif %}
+</table>
+
+{% if selected %}
+  <h2>{{ selected.title }}: {{ selected.count }} Posten</h2>
+  <table class="table">
+    <thead><tr><th>Datum</th><th>Quittung</th><th>Nr.</th><th>Artikel</th><th>Besitzerin</th><th class="num">CHF</th><th class="num">Besitzerin</th><th class="num">Börse</th></tr></thead>
+    <tbody>
+      {% for p in selected.positions %}
+        <tr>
+          <td>{{ p.date|date:"j.n.Y" }}</td>
+          <td>{% if p.sale_id %}<a href="{% url 'sale_detail' p.sale_id %}">{{ p.sale_number }}</a>{% else %}<span class="muted">alte Liste</span>{% endif %}</td>
+          <td>{{ p.label }}</td>
+          <td>{{ p.description }}{% if p.size %} · {{ p.size }}{% endif %}</td>
+          <td>{{ p.owner }}</td>
+          <td class="num">{{ p.price|chf }}</td>
+          <td class="num">{{ p.owner_amount|chf }}</td>
+          <td class="num">{{ p.shop_amount|chf }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+
+{% if recent_sales %}
+  <h2>Letzte Quittungen</h2>
+  <table class="table">
+    <thead><tr><th>Nr.</th><th>Datum</th><th>Käuferin</th><th>Bezahlt</th><th class="num">Posten</th><th class="num">CHF</th></tr></thead>
+    <tbody>
+      {% for s in recent_sales %}
+        <tr>
+          <td><a href="{% url 'sale_detail' s.pk %}">{{ s.number }}</a>{% if s.cancelled_at %} <span class="badge">storniert</span>{% endif %}</td>
+          <td>{{ s.date|date:"j.n.Y" }}</td>
+          <td>{{ s.buyer.name|default:"" }}</td>
+          <td>{{ s.get_payment_display }}</td>
+          <td class="num">{{ s.items.all|length }}</td>
+          <td class="num">{{ s.total|chf }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}

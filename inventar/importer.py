@@ -14,7 +14,7 @@ from pathlib import Path
 from django.db import transaction
 from django.utils import timezone
 
-from .models import AppSettings, Article, Category, Person
+from .models import AppSettings, Article, Category, Payout, Person, Sale
 from .money import split
 from .normalize import (
     header_key,
@@ -54,6 +54,15 @@ UNKNOWN_OWNER = "Unbekannt"
 
 class ImportFehler(Exception):
     """Die Datei passt nicht; die Meldung ist für Stephanie verständlich."""
+
+
+def ensure_import_allowed() -> None:
+    """Der Import ersetzt den ganzen Bestand – nur solange in der App noch nichts verkauft oder ausbezahlt wurde."""
+    if Sale.objects.exists() or Payout.objects.exists():
+        raise ImportFehler(
+            "In der App gibt es schon Verkäufe oder Auszahlungen. Ein Import würde sie überschreiben "
+            "und ist deshalb gesperrt."
+        )
 
 
 # --- 1. Lesen -------------------------------------------------------------------------------------
@@ -146,7 +155,7 @@ def analyze(rows: list[list], categories: dict[int, int]) -> dict:
     articles, empty_rows = [], 0
     for line, row in enumerate(body, start=h + 2):
         number = to_int(get(row, "number"))
-        description = text(get(row, "description"))
+        description = " ".join(text(get(row, "description")).split())
         if number is None and not description:
             if any(text(v) for v in row):
                 empty_rows += 1
@@ -278,6 +287,7 @@ def apply(result: dict, decisions: dict[str, str]) -> dict:
 
     decisions: Issue-ID → Entscheidung (behaltene Zeile, korrigierter Preis/Datum, gewählter Kontakt).
     """
+    ensure_import_allowed()
     articles = [dict(a) for a in result["articles"]]
     people = result["people"]
     renumber: set[int] = set()

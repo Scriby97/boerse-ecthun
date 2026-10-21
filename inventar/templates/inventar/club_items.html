@@ -1,0 +1,32 @@
+{% extends "inventar/base.html" %}
+{% load boerse %}
+{% block title %}Club EC Thun – Börse EC Thun{% endblock %}
+{% block content %}
+<h1>Clubbekleidung EC Thun</h1>
+<p class="muted">Bestand pro Artikel und Grösse. Jeder Verkauf an der Kasse zählt eins herunter. Die Clubabrechnung kommt in der nächsten Etappe.</p>
+<table class="table">
+  <thead><tr><th>Bezeichnung</th><th>Grösse</th><th class="num">Preis Kunde</th><th class="num">an den Club</th><th class="num">Bestand</th></tr></thead>
+  <tbody>
+    {% for item in items %}
+      <tr>
+        <td><a href="{% url 'club_item_edit' item.pk %}">{{ item.name }}</a></td>
+        <td>{{ item.size }}</td>
+        <td class="num">{{ item.customer_price|chf }}</td>
+        <td class="num">{{ item.club_price|chf }}</td>
+        <td class="num {% if item.stock <= 0 %}warn{% endif %}">{{ item.stock }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Artikel oder Grösse hinzufügen</h2>
+<form method="post" class="form">
+  {% csrf_token %}
+  <div class="form-grid">
+    {% for field in form %}
+      <div class="field{% if field.errors %} has-error{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>
+    {% endfor %}
+  </div>
+  <div class="actions"><button type="submit" class="primary">Hinzufügen</button></div>
+</form>
+{% endblock %}

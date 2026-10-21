@@ -2,6 +2,9 @@
 {% block title %}Import – Börse EC Thun{% endblock %}
 {% block content %}
 <h1>Inventarliste importieren</h1>
+{% if blocked %}
+  <p class="notice">{{ blocked }}</p>
+{% else %}
 <p>Die App liest die Liste aus Numbers, Excel oder CSV und zeigt zuerst eine Vorschau. Gespeichert wird erst nach dem Bestätigen.</p>
 {% if existing %}
   <p class="notice">In der App sind schon {{ existing }} Artikel. Ein Import ersetzt alle Artikel und Personen. Vorher legt die App automatisch eine Sicherung an.</p>
@@ -15,4 +18,5 @@
   </div>
   <div class="actions"><button type="submit" class="primary">Datei prüfen</button></div>
 </form>
+{% endif %}
 {% endblock %}

@@ -116,3 +116,49 @@ button.primary:hover, .button.primary:hover { background: #1e40af; }
 .issue .plain { margin: 0 0 0.5rem; padding-left: 1.2rem; }
 .issue .choice { display: flex; gap: 0.5rem; align-items: flex-start; font-weight: 400; margin: 0.35rem 0; }
 .issue-range, .issue-no_number, .issue-unknown_category, .issue-no_owner { background: #f8fafc; }
+
+/* Kasse */
+.kasse { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 1.5rem; align-items: start; }
+@media (max-width: 1050px) { .kasse { grid-template-columns: 1fr; } }
+.kasse-input, .kasse-cart { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.1rem 1.25rem; }
+.kasse-cart h2 { margin-top: 0; }
+.number-form label { display: block; margin-bottom: 0.35rem; }
+.number-row { display: flex; gap: 0.5rem; }
+.number-row input { flex: 1; font-size: 1.6rem; padding: 0.6rem 0.8rem; min-width: 0; }
+.choices { margin-top: 1rem; display: grid; gap: 0.4rem; }
+.choices p { margin: 0; font-weight: 600; }
+.choice-button { width: 100%; text-align: left; background: var(--accent-soft); border-color: var(--accent); }
+.extra { margin-top: 1rem; border-top: 1px solid var(--line); padding-top: 0.75rem; }
+.extra summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+.inline-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem 0.8rem; margin-top: 0.75rem; align-items: end; }
+.inline-grid .field-description { grid-column: 1 / -1; }
+.cart .price-input { width: 6.5rem; text-align: right; }
+.cart tfoot th { border-bottom: none; }
+.cart .total { font-size: 1.35rem; }
+.checkout { margin-top: 1rem; }
+.radios { border: none; padding: 0; margin: 0; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.radios legend { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.3rem; }
+.radios.field { flex-direction: row; }
+.radios label { font-weight: 400; display: inline-flex; gap: 0.35rem; align-items: center; }
+.radios div { display: flex; gap: 0.75rem; }
+button.big { font-size: 1.2rem; padding: 0.8rem 1.8rem; }
+.link-button { background: none; border: none; color: var(--muted); text-decoration: underline; padding: 0.25rem; cursor: pointer; }
+.link-button.danger { color: var(--danger); }
+.danger-zone { margin-top: 1.5rem; }
+
+/* Auszahlen */
+.payout-buttons { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin: 0.5rem 0; }
+.payout-buttons span { margin-right: 0.5rem; }
+.payout-buttons.compact { margin: 0; }
+.payout-buttons.compact button { padding: 0.3rem 0.7rem; font-size: 0.9rem; }
+.payout-now h2 { margin-top: 0; }
+
+/* Verkauft */
+.tabs { display: flex; gap: 0.25rem; margin-bottom: 1rem; }
+.tabs a { padding: 0.45rem 0.9rem; border-radius: 999px; text-decoration: none; color: var(--ink); border: 1px solid var(--line); background: var(--surface); }
+.tabs a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.table tr.selected { background: var(--accent-soft); }
+.table tfoot th { background: #f8fafc; }
+.table td.warn { color: var(--danger); font-weight: 600; }
+.stat-main { background: var(--accent); border-color: var(--accent); color: #fff; }
+.stat-main .stat-label { color: #dbeafe; }

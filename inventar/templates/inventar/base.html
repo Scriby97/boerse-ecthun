@@ -22,6 +22,7 @@
     <a class="quiet" href="{% url 'settings' %}" {% if name == 'settings' %}aria-current="page"{% endif %}>Einstellungen</a>
     <a class="quiet" href="{% url 'import_upload' %}" {% if 'import' in name %}aria-current="page"{% endif %}>Import</a>
     {% endwith %}
+    <span class="version">Version {{ app_version }}</span>
   </nav>
   <main>
     {% if messages %}

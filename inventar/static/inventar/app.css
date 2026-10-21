@@ -173,3 +173,4 @@ form.inline { display: inline; }
 .list-actions p { margin: 0 auto 0 0; }
 button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 .backup-line { margin-top: 2rem; font-size: 0.9rem; }
+.sidebar .version { padding: 0.5rem 0.75rem 0; font-size: 0.8rem; color: #a0aec0; }

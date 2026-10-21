@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from . import importer, sales
+from . import importer, sales, updates
 from .backup import backup_database, backup_is_stale, ensure_daily_backup, last_backup_time
 from .forms import ArticleForm, ImportUploadForm, PersonForm
 from .models import Article, Category, Payout, Person, Sale
@@ -42,6 +42,7 @@ def start(request):
             "person_count": Person.objects.count(),
             "last_backup": last_backup_time(),
             "backup_stale": backup_is_stale(),
+            "update": updates.available(),
         },
     )
 

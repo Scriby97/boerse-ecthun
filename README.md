@@ -27,6 +27,20 @@ Beim Entwickeln liegen Datenbank und Sicherungen in `data/`. Die fertige App nut
 (Mac: `~/Library/Application Support/BoerseECThun`, Windows: `%APPDATA%\BoerseECThun`), änderbar mit `BOERSE_DATA_DIR`.
 
 Wie die fertige App starten: `pip install -r requirements-desktop.txt`, dann `python app.py`.
+`python app.py --selftest` prüft die App ohne Fenster in einem Wegwerf-Datenordner.
+
+## Mac-App bauen und ausliefern
+
+GitHub Actions (`.github/workflows/build.yml`) testet bei jedem Push und baut die Mac-App für Apple-Chip und Intel
+(PyInstaller, Rezept `boerse.spec`), inklusive Selbsttest der fertigen App. Die ZIPs liegen beim Lauf unter «Artifacts».
+
+Neue Version ausliefern:
+1. `__version__` in `boerse/__init__.py` erhöhen, committen
+2. `git tag v1.0.1 && git push origin master v1.0.1`
+3. GitHub legt ein Release mit beiden ZIPs an; die App zeigt beim nächsten Start (mit Internet) den Hinweis an.
+
+Lokal (Windows) lässt sich das Verpacken mit `pyinstaller --noconfirm boerse.spec` testen,
+dann `dist/Börse EC Thun/Börse EC Thun.exe --selftest`.
 
 ## Aufbau
 
@@ -57,4 +71,5 @@ nicht doppelt), frühere Clubverkäufe nachtragen (ohne Bestandsänderung), Abre
 Etiketten als PDF (direkt auf dem LabelWriter) oder Excel (DYMO Connect), Gesamtexport Excel, Einstellungen,
 Sicherungen: täglich, beim Schliessen, vor Import/Wiederherstellen; lokal und in iCloud Drive, je 30 Stück.
 
-Als Nächstes (Phase 4): Mac-Paket (pywebview + PyInstaller, Bau über GitHub Actions auf macOS), Update-Hinweis.
+Phase 4 (Mac-App): eigenes Fenster (pywebview, Downloads erlaubt), Selbsttest, PyInstaller-Rezept,
+Bau und Release über GitHub Actions, Hinweis auf neue Versionen auf der Startseite.

@@ -51,7 +51,7 @@ def article_create(request):
         form = ArticleForm(request.POST)
         if form.is_valid():
             article = form.save()
-            messages.success(request, f"Artikel {article.number} gespeichert: {article.description}")
+            messages.success(request, f"Artikel {article.label} gespeichert: {article.description}")
             # Serienerfassung: gleiche Kategorie und Besitzerin bleiben gesetzt
             return redirect(
                 f"{request.path}?kategorie={article.category.code}&besitzerin={article.owner_id}"
@@ -69,12 +69,12 @@ def article_create(request):
 
 
 @require_http_methods(["GET", "POST"])
-def article_edit(request, number):
-    article = get_object_or_404(Article, number=number)
+def article_edit(request, pk):
+    article = get_object_or_404(Article, pk=pk)
     form = ArticleForm(request.POST or None, instance=article)
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.success(request, f"Artikel {article.number} gespeichert.")
+        messages.success(request, f"Artikel {article.label} gespeichert.")
         return redirect("article_list")
     return render(
         request,
@@ -221,6 +221,8 @@ def import_preview(request, token):
             f"Import fertig: {stats['articles']} Artikel und {stats['persons']} Personen übernommen. "
             f"Sicherung vorher: {backup.name}",
         )
+        for label, description in stats["suffixed"]:
+            messages.info(request, f"Nummer {label} (doppelt beschriftet): {description}")
         for old, new, description in stats["renumbered"]:
             messages.info(request, f"Neue Nummer {new} (vorher {old or 'keine'}): {description}")
         if stats["skipped"]:
@@ -258,7 +260,11 @@ def _issue_views(result) -> list[dict]:
     for issue in sorted(result["issues"], key=lambda i: ISSUE_ORDER.index(i["type"])):
         view = dict(issue, title=ISSUE_TITLES[issue["type"]])
         if "rows" in issue:
-            view["articles"] = [dict(articles[r], index=r) for r in issue["rows"]]
+            # Nummer, wie sie beim Behalten aller Artikel heisst: 1096, 1096+, …
+            view["articles"] = [
+                dict(articles[r], index=r, preview_label=f"{issue['number']}{'+' * n}")
+                for n, r in enumerate(issue["rows"])
+            ]
         if "row" in issue:
             view["article"] = articles[issue["row"]]
         if "person" in issue:

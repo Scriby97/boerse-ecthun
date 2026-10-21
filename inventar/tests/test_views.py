@@ -23,7 +23,7 @@ class PageTests(TestCase):
             reverse("article_list"),
             reverse("article_create"),
             reverse("article_create") + "?kategorie=10",
-            reverse("article_edit", args=[10005]),
+            reverse("article_edit", args=[Article.objects.get(number=10005).pk]),
             reverse("person_list"),
             reverse("person_detail", args=[self.anna.pk]),
             reverse("person_create"),
@@ -57,6 +57,15 @@ class PageTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Article.objects.filter(number=10006).exists())
+
+    def test_gleiche_nummer_mit_zusatz(self):
+        data = {"category": self.cat.pk, "number": 10005, "owner": self.anna.pk, "description": "Kleid",
+                "intake_date": "2026-10-21"}
+        response = self.client.post(reverse("article_create"), data)
+        self.assertContains(response, "Diese Nummer ist schon vergeben.")
+        response = self.client.post(reverse("article_create"), data | {"number_suffix": "+"})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Article.objects.filter(number=10005, number_suffix="+").exists())
 
     def test_suche_im_inventar(self):
         response = self.client.get(reverse("article_list"), {"q": "rot"})

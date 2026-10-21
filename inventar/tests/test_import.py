@@ -28,7 +28,7 @@ def sample_rows():
         [None, D(2024, 2, 1), "Kürkleid blau", "8 bis 10", "Muster Anna", "079 444 55 66", 45.0, 10.0, 10001.0, D(2024, 3, 1), 15.75, 29.25, "Käuferin Berta", "zur Abrechung", "Abgerechnet"],
         [None, D(2024, 2, 2), "Jüpli rosa", "XS", "Beispiel Clara", None, 10.0, 11.0, 11001.0, D(2024, 3, 2), 3.5, 6.5, None, "zur Abrechung", None],
         [None, D(2024, 2, 3), "Body hautfarben", "S", "Beispiel Clara", None, "40-50", 12.0, 12001.0, None, None, None, None, "offen", None],
-        [None, D(2024, 2, 4), "zweiter Artikel 1006", "M", "Beispiel Clara", None, 8.0, 1.0, 1006.0, None, None, None, None, "offen", None],
+        [None, D(2024, 2, 4), "zweiter Artikel 1006", "M", "Beispiel Clara", None, "nach Absprache", 1.0, 1006.0, None, None, None, None, "offen", None],
         [None, D(2024, 10, 16), "Handschuhe", "-", "Spenderin Doris", "möchte nichts dafür", 10.0, 3.0, 3001.0, D(2016, 1, 2), 10.0, 0.0, None, "zur Abrechung", "Abgerechnet"],
         [None, None, None, None, None, None, None, None, None, None, None, None, None, "offen", None],
         [None, None, None, None, None, None, None, None, None, None, None, None, None, "offen", None],
@@ -69,15 +69,16 @@ class ImportTests(TestCase):
         dup = issues["duplicate"]
         decisions = {
             dup["id"]: str(dup["rows"][1]),  # der zweite Artikel behält 1006
-            issues["price"]["id"]: "45",
-            issues["sold_before_intake"]["id"]: "2025-01-02",
+            issues["price"]["id"]: "8",
+            issues["sold_before_intake"]["id"]: "2026-01-02",
             issues["contact"]["id"]: "1",  # älterer Kontakt
         }
         stats = importer.apply(result, decisions)
 
         self.assertEqual(stats["articles"], 6)
         self.assertEqual(Person.objects.count(), 4)
-        self.assertEqual(Article.objects.get(number=1006).description, "zweiter Artikel 1006")
+        zweiter = Article.objects.get(number=1006)
+        self.assertEqual((zweiter.description, zweiter.price, zweiter.price_note), ("zweiter Artikel 1006", Decimal("8.00"), "nach Absprache"))
         renumbered = Article.objects.get(description="schwarze Trainingsleggins")
         self.assertEqual(renumbered.number, 1007)
         self.assertEqual(stats["renumbered"], [(1006, 1007, "schwarze Trainingsleggins")])
@@ -90,16 +91,24 @@ class ImportTests(TestCase):
 
         self.assertEqual(Article.objects.get(number=11001).status, Article.Status.SOLD)
         body = Article.objects.get(number=12001)
-        self.assertEqual((body.price, body.price_note), (Decimal("45.00"), "40-50"))
+        self.assertEqual((body.price, body.price_note), (Decimal("50.00"), "verhandelbar bis 40.00"))
 
         handschuhe = Article.objects.get(number=3001)
         self.assertTrue(handschuhe.is_donated)
-        self.assertEqual(handschuhe.sold_date, dt.date(2025, 1, 2))
+        self.assertEqual(handschuhe.sold_date, dt.date(2026, 1, 2))
         self.assertEqual(handschuhe.size, "")
 
         anna = Person.objects.get(name="Muster Anna")
         self.assertEqual(anna.phone, "079 111 22 33")
         self.assertTrue(anna.twint)
+
+    def test_doppelte_nummern_bleiben_standardmaessig_mit_plus(self):
+        stats = importer.apply(self.analyze(), {})
+        labels = sorted(a.label for a in Article.objects.filter(number=1006))
+        self.assertEqual(labels, ["1006", "1006+"])
+        self.assertEqual(Article.objects.get(number=1006, number_suffix="").description, "schwarze Trainingsleggins")
+        self.assertEqual(stats["suffixed"], [("1006+", "zweiter Artikel 1006")])
+        self.assertEqual(stats["renumbered"], [])
 
     def test_import_ersetzt_bisherigen_bestand(self):
         result = self.analyze()

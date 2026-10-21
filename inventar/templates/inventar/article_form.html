@@ -1,8 +1,8 @@
 {% extends "inventar/base.html" %}
-{% block title %}{% if article %}Artikel {{ article.number }}{% else %}Erfassen{% endif %} – Börse EC Thun{% endblock %}
+{% block title %}{% if article %}Artikel {{ article.label }}{% else %}Erfassen{% endif %} – Börse EC Thun{% endblock %}
 {% block content %}
 {% if article %}
-  <h1>Artikel {{ article.number }}</h1>
+  <h1>Artikel {{ article.label }}</h1>
   <p class="muted">Status: {{ article.get_status_display }}{% if article.sold_date %} · verkauft am {{ article.sold_date|date:"j.n.Y" }}{% endif %}</p>
 {% else %}
   <h1>Artikel erfassen</h1>
@@ -14,7 +14,7 @@
   </div>
 {% endif %}
 
-{% if article or category %}
+{% if article or category or form.is_bound %}
 <form method="post" class="form">
   {% csrf_token %}
   {{ form.non_field_errors }}

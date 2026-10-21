@@ -6,6 +6,9 @@ from django.utils import timezone
 
 from .money import split
 
+# Stephanies Wortlaut (21.10.2026)
+RECEIPT_THANKS = "Herzlichen Dank für den Einkauf und weiterhin viel Freude auf dem Eis"
+
 
 class AppSettings(models.Model):
     """Einstellungen, die Stephanie selbst ändern kann (es gibt genau einen Datensatz)."""
@@ -13,7 +16,7 @@ class AppSettings(models.Model):
     owner_share_default = models.DecimalField(
         "Anteil Besitzerin (%)", max_digits=5, decimal_places=2, default=Decimal("65")
     )
-    receipt_thanks = models.TextField("Dankestext auf der Quittung", default="Herzlichen Dank für deinen Einkauf!")
+    receipt_thanks = models.TextField("Dankestext auf der Quittung", default=RECEIPT_THANKS)
 
     class Meta:
         verbose_name = "Einstellungen"
@@ -85,7 +88,11 @@ class Article(models.Model):
         PAID = "ausbezahlt", "ausbezahlt"
         RETURNED = "zurueck", "zurückgegeben"
 
-    number = models.PositiveIntegerField("Nummer", unique=True)
+    number = models.PositiveIntegerField("Nummer")
+    # Doppelt beschriftete Nummern aus der alten Liste: der zweite Artikel heisst 1096+
+    number_suffix = models.CharField(
+        "Zusatz", max_length=3, blank=True, help_text="z. B. + bei einer doppelt vergebenen Nummer"
+    )
     category = models.ForeignKey(Category, models.PROTECT, related_name="articles", verbose_name="Kategorie")
     description = models.CharField("Bezeichnung", max_length=300)
     size = models.CharField("Grösse", max_length=60, blank=True)
@@ -114,12 +121,24 @@ class Article(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["number"]
+        ordering = ["number", "number_suffix"]
         verbose_name = "Artikel"
         verbose_name_plural = "Artikel"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["number", "number_suffix"],
+                name="unique_article_label",
+                violation_error_message="Diese Nummer ist schon vergeben.",
+            )
+        ]
 
     def __str__(self):
-        return f"{self.number} {self.description}"
+        return f"{self.label} {self.description}"
+
+    @property
+    def label(self) -> str:
+        """Nummer wie auf der Etikette, z. B. 1096 oder 1096+"""
+        return f"{self.number}{self.number_suffix}"
 
     @property
     def is_donated(self) -> bool:

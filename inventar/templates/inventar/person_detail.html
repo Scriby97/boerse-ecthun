@@ -28,7 +28,7 @@
   <tbody>
     {% for a in articles %}
       <tr>
-        <td><a href="{% url 'article_edit' a.number %}">{{ a.number }}</a></td>
+        <td><a href="{% url 'article_edit' a.pk %}">{{ a.label }}</a></td>
         <td>{{ a.description }}</td>
         <td>{{ a.size }}</td>
         <td class="num">{{ a.price|chf }}</td>
@@ -48,7 +48,7 @@
   <thead><tr><th>Nr.</th><th>Bezeichnung</th><th>Datum</th><th class="num">CHF</th></tr></thead>
   <tbody>
     {% for a in purchases %}
-      <tr><td>{{ a.number }}</td><td>{{ a.description }}</td><td>{{ a.sold_date|date:"j.n.Y" }}</td><td class="num">{{ a.sale_price|chf }}</td></tr>
+      <tr><td>{{ a.label }}</td><td>{{ a.description }}</td><td>{{ a.sold_date|date:"j.n.Y" }}</td><td class="num">{{ a.sale_price|chf }}</td></tr>
     {% endfor %}
   </tbody>
 </table>

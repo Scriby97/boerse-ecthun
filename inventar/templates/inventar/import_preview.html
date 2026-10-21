@@ -29,10 +29,16 @@
       <fieldset class="issue issue-{{ issue.type }}">
         <legend>{{ issue.title }}{% if issue.number %} {{ issue.number }}{% endif %}</legend>
         {% if issue.type == "duplicate" %}
-          <p>Welcher Artikel behält die Nummer {{ issue.number }}? Die anderen bekommen eine neue.</p>
+          <ul class="plain">
+            {% for a in issue.articles %}
+              <li>Zeile {{ a.line }}: {{ a.description }}, {{ a.size }}, {{ a.owner }}, Eingang {{ a.intake_date|iso_date }}</li>
+            {% endfor %}
+          </ul>
+          <label class="choice"><input type="radio" name="{{ issue.id }}" value="alle" checked>
+            Alle behalten, wie beschriftet: {% for a in issue.articles %}Zeile {{ a.line }} als {{ a.preview_label }}{% if not forloop.last %}, {% endif %}{% endfor %}</label>
           {% for a in issue.articles %}
-            <label class="choice"><input type="radio" name="{{ issue.id }}" value="{{ a.index }}" {% if forloop.first %}checked{% endif %}>
-              Zeile {{ a.line }}: {{ a.description }}, {{ a.size }}, {{ a.owner }}, Eingang {{ a.intake_date|iso_date }}</label>
+            <label class="choice"><input type="radio" name="{{ issue.id }}" value="{{ a.index }}">
+              Nur Zeile {{ a.line }} behält {{ issue.number }}, die anderen bekommen eine neue Nummer</label>
           {% endfor %}
         {% elif issue.type == "price" %}
           {% with a=issue.article %}

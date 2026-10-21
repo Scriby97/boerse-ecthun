@@ -113,5 +113,6 @@ button.primary:hover, .button.primary:hover { background: #1e40af; }
 .issue { border: 1px solid var(--line); border-radius: var(--radius); padding: 0.75rem 1rem 1rem; margin: 0 0 0.75rem; }
 .issue legend { font-weight: 700; padding: 0 0.35rem; }
 .issue p { margin: 0.25rem 0 0.6rem; }
+.issue .plain { margin: 0 0 0.5rem; padding-left: 1.2rem; }
 .issue .choice { display: flex; gap: 0.5rem; align-items: flex-start; font-weight: 400; margin: 0.35rem 0; }
 .issue-range, .issue-no_number, .issue-unknown_category, .issue-no_owner { background: #f8fafc; }

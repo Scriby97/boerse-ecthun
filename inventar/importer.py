@@ -281,6 +281,7 @@ def apply(result: dict, decisions: dict[str, str]) -> dict:
     articles = [dict(a) for a in result["articles"]]
     people = result["people"]
     renumber: set[int] = set()
+    suffixes: dict[int, str] = {}
     skip: set[int] = set()
     contact_choice: dict[int, int] = {}
 
@@ -288,8 +289,13 @@ def apply(result: dict, decisions: dict[str, str]) -> dict:
         value = (decisions.get(issue["id"]) or "").strip()
         kind = issue["type"]
         if kind == "duplicate":
-            keep = int(value) if value.isdigit() and int(value) in issue["rows"] else issue["rows"][0]
-            renumber.update(r for r in issue["rows"] if r != keep)
+            if value.isdigit() and int(value) in issue["rows"]:
+                # Nur dieser Artikel behält die Nummer, die anderen bekommen eine neue
+                renumber.update(r for r in issue["rows"] if r != int(value))
+            else:
+                # Standard: alle behalten die Nummer (so sind sie beschriftet), ab dem zweiten mit «+»
+                for n, row in enumerate(issue["rows"][1:], start=1):
+                    suffixes[row] = "+" * n
         elif kind == "no_number":
             renumber.add(issue["row"])
         elif kind == "unknown_category":
@@ -324,12 +330,13 @@ def apply(result: dict, decisions: dict[str, str]) -> dict:
     today = timezone.localdate()
     created, renumbered = 0, []
 
-    def create(a: dict, number: int):
+    def create(a: dict, number: int, suffix: str = ""):
         price = Decimal(a["price"]) if a["price"] is not None else None
         sold = dt.date.fromisoformat(a["sold_date"]) if a["sold_date"] else None
         owner = persons[person_key(a["owner"] or UNKNOWN_OWNER)]
         article = Article(
             number=number,
+            number_suffix=suffix,
             category=categories[a["code"]],
             description=a["description"] or "(ohne Bezeichnung)",
             size=a["size"],
@@ -352,10 +359,13 @@ def apply(result: dict, decisions: dict[str, str]) -> dict:
         article.save()
 
     # Zuerst alle Artikel mit eindeutiger Nummer, dann die übrigen mit neuer Nummer
+    suffixed = []
     for i, a in enumerate(articles):
         if i not in skip and i not in renumber:
-            create(a, a["number"])
+            create(a, a["number"], suffixes.get(i, ""))
             created += 1
+            if i in suffixes:
+                suffixed.append((f"{a['number']}{suffixes[i]}", a["description"]))
     for i in sorted(renumber - skip):
         a = articles[i]
         number = categories[a["code"]].next_number()
@@ -363,4 +373,10 @@ def apply(result: dict, decisions: dict[str, str]) -> dict:
         created += 1
         renumbered.append((a["number"], number, a["description"]))
 
-    return {"articles": created, "persons": len(persons), "renumbered": renumbered, "skipped": len(skip)}
+    return {
+        "articles": created,
+        "persons": len(persons),
+        "renumbered": renumbered,
+        "suffixed": suffixed,
+        "skipped": len(skip),
+    }

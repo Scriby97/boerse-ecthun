@@ -25,10 +25,13 @@ class NormalizeTests(SimpleTestCase):
         self.assertEqual(parse_price(45.0), (Decimal("45.00"), "", True))
         self.assertEqual(parse_price("12.50"), (Decimal("12.50"), "", True))
         self.assertEqual(parse_price("CHF 20.-"), (Decimal("20.00"), "", True))
-        self.assertEqual(parse_price("gratis"), (Decimal("0.00"), "gratis", False))
-        self.assertEqual(parse_price("-"), (None, "", False))
-        self.assertEqual(parse_price("40-50"), (None, "40-50", False))
-        self.assertEqual(parse_price("verhandelbar 30 - 40.00"), (None, "verhandelbar 30 - 40.00", False))
+        self.assertEqual(parse_price("gratis"), (Decimal("0.00"), "gratis", True))
+        self.assertEqual(parse_price("-"), (Decimal("0.00"), "gratis", True))
+        self.assertEqual(parse_price("40-50"), (Decimal("50.00"), "verhandelbar bis 40.00", True))
+        self.assertEqual(
+            parse_price("verhandelbar 30 - 40.00"), (Decimal("40.00"), "verhandelbar bis 30.00", True)
+        )
+        self.assertEqual(parse_price("nach Absprache"), (None, "nach Absprache", False))
 
     def test_kontakt(self):
         contact = parse_contact("Muster Anna, 079 123 45 67, hat Twint, anna@example.ch")

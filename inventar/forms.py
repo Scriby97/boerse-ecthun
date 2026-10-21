@@ -17,6 +17,7 @@ class ArticleForm(forms.ModelForm):
         fields = [
             "category",
             "number",
+            "number_suffix",
             "owner",
             "description",
             "size",
@@ -33,7 +34,7 @@ class ArticleForm(forms.ModelForm):
             "description": forms.TextInput(attrs={"autofocus": True}),
         }
 
-    field_order = ["category", "number", "owner", "new_owner", "description"]
+    field_order = ["category", "number", "number_suffix", "owner", "new_owner", "description"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -68,18 +68,27 @@ def to_money(value) -> Decimal | None:
     return Decimal(m.group(1).replace(",", ".")).quantize(Decimal("0.01"))
 
 
+_PRICE_RANGE = re.compile(r"(?:verhandelbar\s*)?(\d+(?:[.,]\d{1,2})?)\s*(?:-|–|bis)\s*(\d+(?:[.,]\d{1,2})?)", re.IGNORECASE)
+
+
 def parse_price(value) -> tuple[Decimal | None, str, bool]:
-    """(Preis, Vermerk, eindeutig). Nicht eindeutige Preise soll Stephanie vor dem Import bestätigen."""
+    """(Preis, Vermerk, eindeutig). Nicht eindeutige Preise soll Stephanie vor dem Import bestätigen.
+
+    Stephanies Regeln (21.10.2026): «-» und «gratis» → 0.– mit Vermerk «gratis»;
+    eine Spanne wie «40-50» → der höhere Preis mit Vermerk «verhandelbar bis 40.00».
+    """
     money = to_money(value)
     if money is not None:
         return money, "", True
     raw = text(value)
     if not raw:
         return None, "", True
-    if raw in {"-", "–", "—"}:
-        return None, "", False
-    if raw.casefold() == "gratis":
-        return Decimal("0.00"), "gratis", False
+    if raw in {"-", "–", "—"} or raw.casefold() == "gratis":
+        return Decimal("0.00"), "gratis", True
+    m = _PRICE_RANGE.fullmatch(raw)
+    if m:
+        low, high = sorted(Decimal(g.replace(",", ".")).quantize(Decimal("0.01")) for g in m.groups())
+        return high, f"verhandelbar bis {low}", True
     return None, raw, False
 
 

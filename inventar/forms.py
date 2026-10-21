@@ -1,7 +1,7 @@
 from django import forms
 
 from .importer import SUFFIXES
-from .models import Article, ClubItem, Payout, Person, Sale
+from .models import AppSettings, Article, ClubItem, Payout, Person, Sale
 
 
 class ArticleForm(forms.ModelForm):
@@ -110,3 +110,28 @@ class ClubItemForm(forms.ModelForm):
     class Meta:
         model = ClubItem
         fields = ["name", "size", "customer_price", "club_price", "stock"]
+
+
+class ClubBackfillForm(forms.Form):
+    """Clubverkauf nachtragen (z. B. aus der bisherigen Pages-Liste); ändert den Bestand nicht."""
+
+    date = forms.DateField(label="Datum", widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
+    club_item = forms.ModelChoiceField(label="Clubartikel", queryset=ClubItem.objects.all(), empty_label=None)
+    size = forms.CharField(label="Grösse", max_length=30, required=False)
+    buyer = forms.CharField(label="Käuferin", max_length=200, required=False)
+    club_amount = forms.DecimalField(label="an den Club (CHF)", min_value=0, max_digits=8, decimal_places=2,
+                                     required=False, help_text="Leer = Betrag aus der Liste")
+
+
+class ClubStatementForm(forms.Form):
+    end_date = forms.DateField(label="Abrechnung per", widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
+
+
+class SettingsForm(forms.ModelForm):
+    class Meta:
+        model = AppSettings
+        fields = ["owner_share_default", "owner_name", "place", "receipt_thanks", "club_payee"]
+        widgets = {
+            "receipt_thanks": forms.Textarea(attrs={"rows": 2}),
+            "club_payee": forms.Textarea(attrs={"rows": 2}),
+        }

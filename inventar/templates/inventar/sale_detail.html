@@ -33,7 +33,7 @@
     {% for i in items %}
       <tr>
         <td>{% if i.article %}<a href="{% url 'article_edit' i.article.pk %}">{{ i.article.label }}</a>{% endif %}</td>
-        <td>{{ i.description }}{% if i.owner %}<br><small>{{ i.owner.name }}{% if i.payout %} · ausbezahlt {{ i.payout.date|date:"j.n.Y" }}{% endif %}</small>{% endif %}</td>
+        <td>{{ i.description }}{% if i.owner %}<br><small>{{ i.owner.name }}{% if i.payout %} · <a href="{% url 'payout_pdf' i.payout.pk %}">ausbezahlt {{ i.payout.date|date:"j.n.Y" }}</a>{% endif %}</small>{% endif %}</td>
         <td>{{ i.size }}</td>
         <td>{{ i.get_kind_display }}</td>
         <td class="num">{{ i.price|chf }}</td>

@@ -15,7 +15,13 @@
   </select>
   <button type="submit">Filtern</button>
 </form>
-<p class="muted">{{ count }} Artikel · Wert CHF {{ total|chf }}</p>
+<div class="list-actions">
+  <p class="muted">{{ count }} Artikel · Wert CHF {{ total|chf }}{% if created %} · erfasst am {{ created }}{% endif %}</p>
+  {% if count %}
+    <a class="button" href="{% url 'labels' 'pdf' %}?{{ query }}">Etiketten drucken (PDF)</a>
+    <a class="button" href="{% url 'labels' 'xlsx' %}?{{ query }}" title="Für DYMO Connect">Etiketten als Excel</a>
+  {% endif %}
+</div>
 <table class="table">
   <thead>
     <tr><th>Nr.</th><th>Bezeichnung</th><th>Grösse</th><th>Besitzerin</th><th class="num">CHF</th><th>Eingang</th><th>Status</th></tr>

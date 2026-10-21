@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from . import importer, sales
-from .backup import backup_database
+from .backup import backup_database, backup_is_stale, ensure_daily_backup, last_backup_time
 from .forms import ArticleForm, ImportUploadForm, PersonForm
 from .models import Article, Category, Payout, Person, Sale
 
@@ -21,6 +21,7 @@ log = logging.getLogger(__name__)
 
 
 def start(request):
+    ensure_daily_backup()
     categories = Category.objects.annotate(
         in_stock=Count("articles", filter=Q(articles__status=Article.Status.STOCK))
     )
@@ -39,6 +40,8 @@ def start(request):
             "today_count": today.count(),
             "today_sum": sum((s.total for s in today.prefetch_related("items")), Decimal("0")),
             "person_count": Person.objects.count(),
+            "last_backup": last_backup_time(),
+            "backup_stale": backup_is_stale(),
         },
     )
 
@@ -68,7 +71,15 @@ def article_create(request):
     return render(
         request,
         "inventar/article_form.html",
-        {"form": form, "categories": categories, "category": category, "owner": owner, "sizes": _known_sizes()},
+        {
+            "form": form,
+            "categories": categories,
+            "category": category,
+            "owner": owner,
+            "sizes": _known_sizes(),
+            "today": timezone.localdate(),
+            "created_today": Article.objects.filter(created_at__date=timezone.localdate()).count(),
+        },
     )
 
 
@@ -87,20 +98,34 @@ def article_edit(request, pk):
     )
 
 
-def article_list(request):
+def filter_articles(params) -> tuple:
+    """Artikel nach Suche, Kategorie, Status und Erfassungsdatum (auch für die Etiketten)."""
     articles = Article.objects.select_related("category", "owner")
-    q = request.GET.get("q", "").strip()
-    category = request.GET.get("kategorie", "")
-    status = request.GET.get("status", Article.Status.STOCK)
+    filters = {
+        "q": params.get("q", "").strip(),
+        "category": params.get("kategorie", ""),
+        "status": params.get("status", Article.Status.STOCK),
+        "created": params.get("erfasst", ""),
+    }
+    q = filters["q"]
     if q:
         match = Q(description__icontains=q) | Q(size__icontains=q) | Q(owner__name__icontains=q)
         if q.isdigit():
             match |= Q(number=int(q))
         articles = articles.filter(match)
-    if category:
-        articles = articles.filter(category__code=category)
-    if status:
-        articles = articles.filter(status=status)
+    if filters["category"]:
+        articles = articles.filter(category__code=filters["category"])
+    if filters["status"]:
+        articles = articles.filter(status=filters["status"])
+    if filters["created"]:
+        articles = articles.filter(created_at__date=filters["created"])
+    if params.get("id"):
+        articles = articles.filter(pk=params.get("id"))
+    return articles, filters
+
+
+def article_list(request):
+    articles, filters = filter_articles(request.GET)
     return render(
         request,
         "inventar/article_list.html",
@@ -110,9 +135,11 @@ def article_list(request):
             "total": articles.aggregate(s=Sum("price"))["s"] or Decimal("0"),
             "categories": Category.objects.all(),
             "statuses": Article.Status.choices,
-            "q": q,
-            "category": category,
-            "status": status,
+            "q": filters["q"],
+            "category": filters["category"],
+            "status": filters["status"],
+            "created": filters["created"],
+            "query": request.GET.urlencode(),
         },
     )
 

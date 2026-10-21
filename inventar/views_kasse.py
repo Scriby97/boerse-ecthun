@@ -300,16 +300,6 @@ def payout_person(request, pk):
 
 
 @require_http_methods(["GET", "POST"])
-def club_items(request):
-    form = ClubItemForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        item = form.save()
-        messages.success(request, f"{item} hinzugefügt.")
-        return redirect("club_items")
-    return render(request, "inventar/club_items.html", {"items": ClubItem.objects.all(), "form": form})
-
-
-@require_http_methods(["GET", "POST"])
 def club_item_edit(request, pk):
     item = get_object_or_404(ClubItem, pk=pk)
     form = ClubItemForm(request.POST or None, instance=item)

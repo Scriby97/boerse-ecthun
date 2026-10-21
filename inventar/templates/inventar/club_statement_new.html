@@ -1,0 +1,31 @@
+{% extends "inventar/base.html" %}
+{% load boerse %}
+{% block title %}Clubabrechnung – Börse EC Thun{% endblock %}
+{% block content %}
+<h1>Clubabrechnung per {{ end_date|date:"j.n.Y" }}</h1>
+{% if items %}
+  <table class="table">
+    <thead><tr><th>Datum</th><th>Was</th><th class="num">CHF</th></tr></thead>
+    <tbody>
+      {% for i in items %}
+        <tr>
+          <td>{{ i.sale.date|date:"j.n.Y" }}</td>
+          <td>{{ i.description }} {{ i.size }}{% if i.sale.buyer %} ({{ i.sale.buyer.name }}){% endif %}</td>
+          <td class="num">{{ i.club_amount|chf }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot><tr><th colspan="2">Total an den Club</th><th class="num">{{ total|chf }}</th></tr></tfoot>
+  </table>
+  <form method="post" class="actions">
+    {% csrf_token %}
+    <input type="hidden" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+    <button type="submit" class="primary">Abrechnung erstellen</button>
+    <a href="{% url 'club_items' %}">Abbrechen</a>
+  </form>
+  <p class="muted">Danach gelten diese Verkäufe als abgerechnet. Das PDF gibt es unter «Club EC Thun».</p>
+{% else %}
+  <p>Bis zu diesem Datum gibt es keine offenen Clubverkäufe.</p>
+  <a href="{% url 'club_items' %}">Zurück</a>
+{% endif %}
+{% endblock %}

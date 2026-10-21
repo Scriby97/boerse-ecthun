@@ -36,6 +36,7 @@ h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; }
 .sidebar a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .sidebar .soon { color: #a0aec0; cursor: default; }
 .sidebar .secondary { margin-top: auto; color: var(--muted); }
+.sidebar .quiet { color: var(--muted); }
 
 main { flex: 1; padding: 1.75rem 2rem 3rem; max-width: 1200px; min-width: 0; }
 
@@ -162,3 +163,13 @@ button.big { font-size: 1.2rem; padding: 0.8rem 1.8rem; }
 .table td.warn { color: var(--danger); font-weight: 600; }
 .stat-main { background: var(--accent); border-color: var(--accent); color: #fff; }
 .stat-main .stat-label { color: #dbeafe; }
+
+/* Phase 3 */
+.card-title { margin-top: 0; }
+.inline-form { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin: 0.5rem 0; }
+.inline-form label { margin: 0; }
+form.inline { display: inline; }
+.list-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.list-actions p { margin: 0 auto 0 0; }
+button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+.backup-line { margin-top: 2rem; font-size: 0.9rem; }

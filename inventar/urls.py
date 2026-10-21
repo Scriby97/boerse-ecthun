@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, views_kasse
+from . import views, views_admin, views_kasse
 
 urlpatterns = [
     path("", views.start, name="start"),
@@ -31,6 +31,18 @@ urlpatterns = [
     path("verkauf/<int:pk>/auszahlen/", views_kasse.sale_payout, name="sale_payout"),
     path("abrechnen/", views_kasse.payout_list, name="payout_list"),
     path("abrechnen/<int:pk>/", views_kasse.payout_person, name="payout_person"),
-    path("club/", views_kasse.club_items, name="club_items"),
+    path("club/", views_admin.club_items, name="club_items"),
     path("club/<int:pk>/", views_kasse.club_item_edit, name="club_item_edit"),
+    path("club/nachtragen/", views_admin.club_backfill, name="club_backfill"),
+    path("club/abrechnung/", views_admin.club_statement_new, name="club_statement_new"),
+    path("club/abrechnung/<int:pk>.pdf", views_admin.club_statement_pdf_view, name="club_statement_pdf"),
+    path("club/abrechnung/<int:pk>/loeschen/", views_admin.club_statement_delete, name="club_statement_delete"),
+    # Abrechnungen, Etiketten, Export, Einstellungen
+    path("auszahlung/<int:pk>/abrechnung.pdf", views_admin.payout_pdf_view, name="payout_pdf"),
+    path("etiketten.<str:fmt>", views_admin.labels, name="labels"),
+    path("export/", views_admin.export_page, name="export"),
+    path("export/boerse.xlsx", views_admin.export_xlsx, name="export_xlsx"),
+    path("einstellungen/", views_admin.settings_page, name="settings"),
+    path("einstellungen/sichern/", views_admin.backup_now, name="backup_now"),
+    path("einstellungen/wiederherstellen/", views_admin.backup_restore, name="backup_restore"),
 ]

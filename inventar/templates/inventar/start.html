@@ -2,6 +2,9 @@
 {% load boerse %}
 {% block content %}
 <h1>Guten Tag, Stephanie</h1>
+{% if backup_stale %}
+  <p class="notice">Die letzte Sicherung ist älter als 3 Tage{% if last_backup %} ({{ last_backup|date:"j.n.Y" }}){% endif %}. <a href="{% url 'settings' %}">Jetzt sichern</a></p>
+{% endif %}
 
 <section class="stats">
   <a class="stat stat-main" href="{% url 'kasse' %}">
@@ -32,4 +35,5 @@
     </a>
   {% endfor %}
 </div>
+<p class="muted backup-line">Letzte Sicherung: {% if last_backup %}{{ last_backup|date:"j.n.Y H:i" }}{% else %}noch keine{% endif %}</p>
 {% endblock %}

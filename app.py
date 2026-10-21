@@ -19,9 +19,11 @@ def main():
     from waitress import create_server
 
     from boerse.wsgi import application
+    from inventar.backup import backup_database, ensure_daily_backup
 
     # Neue Versionen bringen ihre Datenbank-Änderungen selbst mit
     call_command("migrate", interactive=False, verbosity=0)
+    ensure_daily_backup()
 
     # Port 0: das Betriebssystem wählt einen freien Port, nur auf diesem Rechner erreichbar
     server = create_server(application, host="127.0.0.1", port=0, threads=4)
@@ -38,10 +40,13 @@ def main():
             thread.join()
         except KeyboardInterrupt:
             pass
+        backup_database("beim-schliessen")
         return
 
     webview.create_window("Börse EC Thun", url, width=1320, height=880, min_size=(1000, 680))
     webview.start()
+    # Fenster geschlossen: Stand sichern (lokal und in iCloud)
+    backup_database("beim-schliessen")
 
 
 if __name__ == "__main__":

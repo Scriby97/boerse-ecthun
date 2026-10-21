@@ -1,0 +1,45 @@
+{% extends "inventar/base.html" %}
+{% block title %}Einstellungen – Börse EC Thun{% endblock %}
+{% block content %}
+<h1>Einstellungen</h1>
+<form method="post" class="form">
+  {% csrf_token %}
+  <div class="form-grid">
+    {% for field in form %}
+      <div class="field field-{{ field.name }}{% if field.errors %} has-error{% endif %}">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}
+      </div>
+    {% endfor %}
+  </div>
+  <div class="actions"><button type="submit" class="primary">Speichern</button></div>
+</form>
+
+<h2>Sicherungen</h2>
+<section class="card">
+  <p>Letzte Sicherung: <strong>{% if last_backup %}{{ last_backup|date:"j.n.Y H:i" }}{% else %}noch keine{% endif %}</strong></p>
+  <p>Die App sichert automatisch einmal am Tag und beim Schliessen. Es bleiben die letzten 30 Sicherungen.</p>
+  {% if icloud %}
+    <p>Zusätzlich in iCloud Drive: <code>{{ icloud.name }}</code></p>
+  {% else %}
+    <p class="notice">iCloud Drive wurde auf diesem Rechner nicht gefunden. Die Sicherungen liegen nur auf diesem Rechner.</p>
+  {% endif %}
+  <form method="post" action="{% url 'backup_now' %}">
+    {% csrf_token %}<button type="submit">Jetzt sichern</button>
+  </form>
+</section>
+
+{% if backups %}
+<details class="extra">
+  <summary>Sicherung zurückholen</summary>
+  <p class="notice">Holt den Stand einer früheren Sicherung zurück. Alles, was danach erfasst wurde, ist dann weg. Der aktuelle Stand wird vorher selbst gesichert.</p>
+  <form method="post" action="{% url 'backup_restore' %}" class="inline-form" onsubmit="return confirm('Wirklich diesen Stand zurückholen?')">
+    {% csrf_token %}
+    <select name="name" aria-label="Sicherung">
+      {% for b in backups %}<option value="{{ b.name }}">{{ b.name }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="danger">Zurückholen</button>
+  </form>
+</details>
+{% endif %}
+{% endblock %}

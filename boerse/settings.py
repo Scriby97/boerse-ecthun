@@ -1,6 +1,8 @@
 """Einstellungen der Börsen-App. Läuft nur lokal auf einem Laptop, ohne Login und ohne Internet."""
 
 import os
+import sys
+import tempfile
 from pathlib import Path
 
 from .paths import data_dir, secret_key
@@ -8,6 +10,13 @@ from .paths import data_dir, secret_key
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = data_dir()
 BACKUP_DIR = DATA_DIR / "Sicherungen"
+AUTO_BACKUP = True
+if sys.argv[1:2] == ["test"]:
+    # Tests laufen in einer offenen Transaktion; eine automatische Kopie würde darauf warten
+    AUTO_BACKUP = False
+    # Tests sichern in einen Wegwerf-Ordner, nie zu den echten Sicherungen oder nach iCloud
+    BACKUP_DIR = Path(tempfile.mkdtemp(prefix="boerse-test-"))
+    os.environ["BOERSE_ICLOUD_DIR"] = ""
 
 SECRET_KEY = secret_key(DATA_DIR)
 DEBUG = os.environ.get("BOERSE_DEBUG") == "1"
@@ -68,6 +77,9 @@ WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Meldungen im Cookie: sie überstehen auch das Zurückholen einer Sicherung (Sitzungen liegen in der Datenbank)
+MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
 # Grosse Numbers-Dateien beim Import zulassen
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024

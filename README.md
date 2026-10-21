@@ -38,7 +38,8 @@ Wie die fertige App starten: `pip install -r requirements-desktop.txt`, dann `py
 - `inventar/backup.py` – Sicherung der Datenbank (vor jedem Import)
 - `inventar/sales.py` – Kasse: Verkauf anlegen/stornieren, offene Beträge, Auszahlungen
 - `inventar/reports.py` – Verkauft-Übersicht pro Woche, Monat, Jahr
-- `inventar/pdf.py` – Kaufquittung als PDF (fpdf2, Logo in `inventar/assets/`)
+- `inventar/pdf.py` – PDFs: Kaufquittung, Clubabrechnung, Abrechnung Besitzerin, Etiketten 57 × 32 mm (fpdf2)
+- `inventar/exports.py` – Excel: Gesamtexport und Etiketten-Tabelle für DYMO Connect
 - `app.py` – Start der fertigen App
 
 ## Stand
@@ -51,5 +52,9 @@ Phase 2 (Kasse und Verkauf): Kasse mit Nummerneingabe (fragt bei 1096/1096+ nach
 Storno, Auszahlung direkt nach dem Verkauf oder gesammelt unter «Abrechnen», Verkauft-Übersicht.
 Der Import ist gesperrt, sobald es Verkäufe oder Auszahlungen gibt.
 
-Als Nächstes (Phase 3): Clubabrechnung EC Thun (30.6./31.12.), Abrechnung pro Besitzerin als PDF,
-Etiketten für DYMO, Excel-Export, automatische Sicherung (inkl. iCloud).
+Phase 3 (Abrechnungen und Export): Clubabrechnung per Stichtag (Vorschau, PDF im Layout der Pages-Quittung,
+nicht doppelt), frühere Clubverkäufe nachtragen (ohne Bestandsänderung), Abrechnung pro Auszahlung als PDF,
+Etiketten als PDF (direkt auf dem LabelWriter) oder Excel (DYMO Connect), Gesamtexport Excel, Einstellungen,
+Sicherungen: täglich, beim Schliessen, vor Import/Wiederherstellen; lokal und in iCloud Drive, je 30 Stück.
+
+Als Nächstes (Phase 4): Mac-Paket (pywebview + PyInstaller, Bau über GitHub Actions auf macOS), Update-Hinweis.

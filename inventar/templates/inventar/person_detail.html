@@ -77,9 +77,9 @@
 {% if payouts %}
 <h2>Auszahlungen</h2>
 <table class="table">
-  <thead><tr><th>Datum</th><th>Art</th><th class="num">CHF</th></tr></thead>
+  <thead><tr><th>Datum</th><th>Art</th><th class="num">CHF</th><th></th></tr></thead>
   <tbody>
-    {% for p in payouts %}<tr><td>{{ p.date|date:"j.n.Y" }}</td><td>{{ p.get_method_display }}</td><td class="num">{{ p.amount|chf }}</td></tr>{% endfor %}
+    {% for p in payouts %}<tr><td>{{ p.date|date:"j.n.Y" }}</td><td>{{ p.get_method_display }}</td><td class="num">{{ p.amount|chf }}</td><td><a href="{% url 'payout_pdf' p.pk %}">Abrechnung (PDF)</a></td></tr>{% endfor %}
   </tbody>
 </table>
 {% endif %}

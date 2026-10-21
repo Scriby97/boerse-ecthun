@@ -2,8 +2,44 @@
 {% load boerse %}
 {% block title %}Club EC Thun – Börse EC Thun{% endblock %}
 {% block content %}
-<h1>Clubbekleidung EC Thun</h1>
-<p class="muted">Bestand pro Artikel und Grösse. Jeder Verkauf an der Kasse zählt eins herunter. Die Clubabrechnung kommt in der nächsten Etappe.</p>
+<h1>Club EC Thun</h1>
+
+<section class="card">
+  <h2 class="card-title">Clubabrechnung</h2>
+  <p>Noch nicht abgerechnet: <strong>{{ open_items|length }} Verkäufe · CHF {{ open_total|chf }}</strong> an den Club.</p>
+  <form method="get" action="{% url 'club_statement_new' %}" class="inline-form">
+    <label for="{{ statement_form.end_date.id_for_label }}">{{ statement_form.end_date.label }}</label>
+    {{ statement_form.end_date }}
+    <button type="submit" class="primary">Vorschau</button>
+  </form>
+  <small>Abgerechnet wird jeweils per 30.6. und 31.12. Die Vorschau zeigt alle offenen Verkäufe bis zu diesem Datum.</small>
+</section>
+
+{% if statements %}
+<h2>Bisherige Clubabrechnungen</h2>
+<table class="table">
+  <thead><tr><th>per</th><th class="num">Posten</th><th class="num">CHF</th><th>erstellt</th><th></th></tr></thead>
+  <tbody>
+    {% for s in statements %}
+      <tr>
+        <td><a href="{% url 'club_statement_pdf' s.pk %}">{{ s.end_date|date:"j.n.Y" }}</a></td>
+        <td class="num">{{ s.items.count }}</td>
+        <td class="num">{{ s.total|chf }}</td>
+        <td>{{ s.created_at|date:"j.n.Y" }}</td>
+        <td>
+          <a href="{% url 'club_statement_pdf' s.pk %}">PDF</a>
+          <form method="post" action="{% url 'club_statement_delete' s.pk %}" class="inline" onsubmit="return confirm('Abrechnung löschen? Die Posten sind danach wieder offen.')">
+            {% csrf_token %}<button type="submit" class="link-button danger">löschen</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<h2>Bestand Clubbekleidung</h2>
+<p class="muted">Bestand pro Artikel und Grösse. Jeder Verkauf an der Kasse zählt eins herunter.</p>
 <table class="table">
   <thead><tr><th>Bezeichnung</th><th>Grösse</th><th class="num">Preis Kunde</th><th class="num">an den Club</th><th class="num">Bestand</th></tr></thead>
   <tbody>
@@ -19,14 +55,30 @@
   </tbody>
 </table>
 
-<h2>Artikel oder Grösse hinzufügen</h2>
-<form method="post" class="form">
-  {% csrf_token %}
-  <div class="form-grid">
-    {% for field in form %}
-      <div class="field{% if field.errors %} has-error{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>
-    {% endfor %}
-  </div>
-  <div class="actions"><button type="submit" class="primary">Hinzufügen</button></div>
-</form>
+<details class="extra">
+  <summary>Artikel oder Grösse hinzufügen</summary>
+  <form method="post" class="form">
+    {% csrf_token %}
+    <div class="form-grid">
+      {% for field in form %}
+        <div class="field{% if field.errors %} has-error{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>
+      {% endfor %}
+    </div>
+    <div class="actions"><button type="submit" class="primary">Hinzufügen</button></div>
+  </form>
+</details>
+
+<details class="extra">
+  <summary>Früheren Clubverkauf nachtragen</summary>
+  <p class="muted">Für Verkäufe, die noch nicht in der App sind (z. B. aus der bisherigen Pages-Liste). Der Bestand ändert sich dabei nicht.</p>
+  <form method="post" action="{% url 'club_backfill' %}" class="form">
+    {% csrf_token %}
+    <div class="form-grid">
+      {% for field in backfill_form %}
+        <div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}</div>
+      {% endfor %}
+    </div>
+    <div class="actions"><button type="submit">Nachtragen</button></div>
+  </form>
+</details>
 {% endblock %}

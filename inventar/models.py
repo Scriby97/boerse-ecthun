@@ -19,6 +19,11 @@ class AppSettings(models.Model):
     receipt_thanks = models.TextField("Dankestext auf der Quittung", default=RECEIPT_THANKS)
     owner_name = models.CharField("Name auf Quittungen", max_length=120, default="Stephanie Luginbühl")
     place = models.CharField("Ort", max_length=80, default="Höfen")
+    club_payee = models.TextField(
+        "Überweisung an den Club",
+        default="CH23 0079 0042 4054 2570 8\nEislauf-Club Thun, 3600 Thun",
+        help_text="Steht unten auf der Clubabrechnung.",
+    )
 
     class Meta:
         verbose_name = "Einstellungen"
@@ -257,6 +262,9 @@ class SaleItem(models.Model):
     shop_amount = models.DecimalField("Anteil Börse", max_digits=8, decimal_places=2, default=Decimal("0"))
     club_amount = models.DecimalField("an den Club", max_digits=8, decimal_places=2, default=Decimal("0"))
     payout = models.ForeignKey(Payout, models.SET_NULL, null=True, blank=True, related_name="sale_items")
+    club_statement = models.ForeignKey(
+        "ClubStatement", models.SET_NULL, null=True, blank=True, related_name="items"
+    )
 
     class Meta:
         ordering = ["pk"]
@@ -265,3 +273,19 @@ class SaleItem(models.Model):
 
     def __str__(self):
         return f"{self.description} {self.price}"
+
+
+class ClubStatement(models.Model):
+    """Abrechnung der Clubbekleidung an den EC Thun (per 30.6. und 31.12.)."""
+
+    end_date = models.DateField("Abrechnung per")
+    total = models.DecimalField("Total an den Club", max_digits=9, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-end_date", "-created_at"]
+        verbose_name = "Clubabrechnung"
+        verbose_name_plural = "Clubabrechnungen"
+
+    def __str__(self):
+        return f"Clubabrechnung per {self.end_date:%d.%m.%Y}"

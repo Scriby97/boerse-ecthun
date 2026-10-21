@@ -2,10 +2,18 @@
 {% block title %}{% if article %}Artikel {{ article.label }}{% else %}Erfassen{% endif %} – Börse EC Thun{% endblock %}
 {% block content %}
 {% if article %}
-  <h1>Artikel {{ article.label }}</h1>
+  <div class="title-row">
+    <h1>Artikel {{ article.label }}</h1>
+    <a class="button" href="{% url 'labels' 'pdf' %}?id={{ article.pk }}&status=">Etikette drucken</a>
+  </div>
   <p class="muted">Status: {{ article.get_status_display }}{% if article.sold_date %} · verkauft am {{ article.sold_date|date:"j.n.Y" }}{% endif %}</p>
 {% else %}
-  <h1>Artikel erfassen</h1>
+  <div class="title-row">
+    <h1>Artikel erfassen</h1>
+    {% if created_today %}
+      <a class="button" href="{% url 'labels' 'pdf' %}?erfasst={{ today|date:'Y-m-d' }}&status=">Etiketten der heute erfassten ({{ created_today }})</a>
+    {% endif %}
+  </div>
   <div class="category-chips" role="list">
     {% for c in categories %}
       <a role="listitem" class="chip {% if c == category %}active{% endif %}" style="--cat: {{ c.color }}"

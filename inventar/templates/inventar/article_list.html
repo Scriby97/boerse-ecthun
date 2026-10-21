@@ -1,0 +1,39 @@
+{% extends "inventar/base.html" %}
+{% load boerse %}
+{% block title %}Inventar – Börse EC Thun{% endblock %}
+{% block content %}
+<h1>Inventar</h1>
+<form method="get" class="filters">
+  <input type="search" name="q" value="{{ q }}" placeholder="Nummer, Bezeichnung, Grösse, Besitzerin" aria-label="Suchen" autofocus>
+  <select name="kategorie" aria-label="Kategorie">
+    <option value="">Alle Kategorien</option>
+    {% for c in categories %}<option value="{{ c.code }}" {% if category == c.code|stringformat:"s" %}selected{% endif %}>{{ c.code }} {{ c.name }}</option>{% endfor %}
+  </select>
+  <select name="status" aria-label="Status">
+    <option value="">Alle Status</option>
+    {% for value, label in statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <button type="submit">Filtern</button>
+</form>
+<p class="muted">{{ count }} Artikel · Wert CHF {{ total|chf }}</p>
+<table class="table">
+  <thead>
+    <tr><th>Nr.</th><th>Bezeichnung</th><th>Grösse</th><th>Besitzerin</th><th class="num">CHF</th><th>Eingang</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    {% for a in articles %}
+      <tr>
+        <td><a href="{% url 'article_edit' a.number %}">{{ a.number }}</a></td>
+        <td>{{ a.description }}{% if a.price_note %} <span class="muted">({{ a.price_note }})</span>{% endif %}{% if a.is_donated %} <span class="badge">gespendet</span>{% endif %}</td>
+        <td>{{ a.size }}</td>
+        <td><a href="{% url 'person_detail' a.owner_id %}">{{ a.owner.name }}</a></td>
+        <td class="num">{{ a.price|chf }}</td>
+        <td>{{ a.intake_date|date:"j.n.Y" }}</td>
+        <td><span class="status status-{{ a.status }}">{{ a.get_status_display }}</span></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7" class="muted">Keine Artikel gefunden.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

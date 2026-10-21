@@ -1,0 +1,32 @@
+{% load static %}<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Börse EC Thun{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'inventar/app.css' %}">
+</head>
+<body>
+  <nav class="sidebar" aria-label="Hauptnavigation">
+    <a class="brand" href="{% url 'start' %}">Börse<br>EC Thun</a>
+    {% with name=request.resolver_match.url_name %}
+    <a href="{% url 'start' %}" {% if name == 'start' %}aria-current="page"{% endif %}>Start</a>
+    <a href="{% url 'article_create' %}" {% if name == 'article_create' %}aria-current="page"{% endif %}>Erfassen</a>
+    <span class="soon" title="Kommt in Phase 2">Kasse</span>
+    <a href="{% url 'article_list' %}" {% if name == 'article_list' or name == 'article_edit' %}aria-current="page"{% endif %}>Inventar</a>
+    <span class="soon" title="Kommt in Phase 2">Verkauft</span>
+    <span class="soon" title="Kommt in Phase 2">Abrechnen</span>
+    <a href="{% url 'person_list' %}" {% if 'person' in name %}aria-current="page"{% endif %}>Kunden</a>
+    <a class="secondary" href="{% url 'import_upload' %}" {% if 'import' in name %}aria-current="page"{% endif %}>Import</a>
+    {% endwith %}
+  </nav>
+  <main>
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

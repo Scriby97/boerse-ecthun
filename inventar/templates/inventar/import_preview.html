@@ -1,0 +1,76 @@
+{% extends "inventar/base.html" %}
+{% load boerse %}
+{% block title %}Import prüfen – Börse EC Thun{% endblock %}
+{% block content %}
+<h1>Import prüfen</h1>
+<p class="muted">{{ result.file_name }}</p>
+
+<table class="table summary">
+  <tbody>
+    <tr><th>Artikel</th><td class="num">{{ summary.articles }}</td></tr>
+    <tr><th>davon an Lager</th><td class="num">{{ summary.stock }}</td></tr>
+    <tr><th>davon verkauft, noch nicht ausbezahlt</th><td class="num">{{ summary.sold }}</td></tr>
+    <tr><th>davon verkauft und ausbezahlt</th><td class="num">{{ summary.paid }}</td></tr>
+    <tr><th>davon gespendet</th><td class="num">{{ summary.donated }}</td></tr>
+    <tr><th>Besitzerinnen</th><td class="num">{{ summary.owners }}</td></tr>
+    <tr><th>nur Käuferinnen</th><td class="num">{{ summary.buyers_only }}</td></tr>
+    <tr><th>leere Zeilen (werden weggelassen)</th><td class="num">{{ summary.empty_rows }}</td></tr>
+    <tr><th>Wert aller Artikel</th><td class="num">CHF {{ summary.value|chf }}</td></tr>
+    <tr><th>Wert der verkauften Artikel</th><td class="num">CHF {{ summary.sold_value|chf }}</td></tr>
+  </tbody>
+</table>
+
+<form method="post" class="form">
+  {% csrf_token %}
+  {% if issues %}
+    <h2>Bitte prüfen ({{ issues|length }})</h2>
+    <p class="muted">Vorgewählt ist jeweils der wahrscheinlichste Wert. Zeile = Zeile in der Liste.</p>
+    {% for issue in issues %}
+      <fieldset class="issue issue-{{ issue.type }}">
+        <legend>{{ issue.title }}{% if issue.number %} {{ issue.number }}{% endif %}</legend>
+        {% if issue.type == "duplicate" %}
+          <p>Welcher Artikel behält die Nummer {{ issue.number }}? Die anderen bekommen eine neue.</p>
+          {% for a in issue.articles %}
+            <label class="choice"><input type="radio" name="{{ issue.id }}" value="{{ a.index }}" {% if forloop.first %}checked{% endif %}>
+              Zeile {{ a.line }}: {{ a.description }}, {{ a.size }}, {{ a.owner }}, Eingang {{ a.intake_date|iso_date }}</label>
+          {% endfor %}
+        {% elif issue.type == "price" %}
+          {% with a=issue.article %}
+          <p>Zeile {{ a.line }}, Nr. {{ a.number }}: {{ a.description }} – in der Liste steht «{{ a.price_raw }}».</p>
+          <label>Preis in CHF <input name="{{ issue.id }}" value="{{ a.price|default_if_none:'' }}" inputmode="decimal" size="8"></label>
+          {% if a.price_note %}<small>Der Text bleibt als Preisvermerk erhalten.</small>{% endif %}
+          {% endwith %}
+        {% elif issue.type == "sold_before_intake" %}
+          {% with a=issue.article %}
+          <p>Zeile {{ a.line }}, Nr. {{ a.number }}: {{ a.description }} – Eingang {{ a.intake_date|iso_date }}, verkauft {{ a.sold_date|iso_date }}.</p>
+          <label>Verkauft am <input type="date" name="{{ issue.id }}" value="{{ a.sold_date }}"></label>
+          {% endwith %}
+        {% elif issue.type == "contact" %}
+          <p>{{ issue.person_data.name }} hat verschiedene Kontaktangaben. Welche ist aktuell?</p>
+          {% for option in issue.person_data.contact_options %}
+            <label class="choice"><input type="radio" name="{{ issue.id }}" value="{{ forloop.counter0 }}" {% if forloop.first %}checked{% endif %}> {{ option }}</label>
+          {% endfor %}
+        {% elif issue.type == "no_number" %}
+          <p>Zeile {{ issue.article.line }}: {{ issue.article.description }} bekommt eine neue Nummer.</p>
+        {% elif issue.type == "unknown_category" %}
+          <p>Zeile {{ issue.article.line }}: Code «{{ issue.article.code|default_if_none:'leer' }}» gibt es nicht. Der Artikel wird übersprungen.</p>
+        {% elif issue.type == "range" %}
+          <p>Zeile {{ issue.article.line }}: Nr. {{ issue.article.number }} liegt nicht im Bereich von Kategorie {{ issue.article.code }}. Wird trotzdem übernommen.</p>
+        {% elif issue.type == "no_owner" %}
+          <p>Zeile {{ issue.article.line }}: {{ issue.article.description }} hat keine Besitzerin und kommt zu «Unbekannt».</p>
+        {% endif %}
+      </fieldset>
+    {% endfor %}
+  {% else %}
+    <p>Keine Unstimmigkeiten gefunden.</p>
+  {% endif %}
+
+  {% if existing %}
+    <p class="notice">Der Import ersetzt die {{ existing }} Artikel, die jetzt in der App sind. Vorher wird automatisch eine Sicherung angelegt.</p>
+  {% endif %}
+  <div class="actions">
+    <button type="submit" class="primary">Import starten</button>
+    <a href="{% url 'import_upload' %}">Abbrechen</a>
+  </div>
+</form>
+{% endblock %}

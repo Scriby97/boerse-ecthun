@@ -1,0 +1,40 @@
+{% extends "inventar/base.html" %}
+{% block title %}{% if article %}Artikel {{ article.number }}{% else %}Erfassen{% endif %} – Börse EC Thun{% endblock %}
+{% block content %}
+{% if article %}
+  <h1>Artikel {{ article.number }}</h1>
+  <p class="muted">Status: {{ article.get_status_display }}{% if article.sold_date %} · verkauft am {{ article.sold_date|date:"j.n.Y" }}{% endif %}</p>
+{% else %}
+  <h1>Artikel erfassen</h1>
+  <div class="category-chips" role="list">
+    {% for c in categories %}
+      <a role="listitem" class="chip {% if c == category %}active{% endif %}" style="--cat: {{ c.color }}"
+         href="?kategorie={{ c.code }}{% if owner %}&besitzerin={{ owner.pk }}{% endif %}">{{ c.code }} {{ c.name }}</a>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if article or category %}
+<form method="post" class="form">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="form-grid">
+    {% for field in form %}
+      <div class="field field-{{ field.name }}{% if field.errors %} has-error{% endif %}">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+  </div>
+  <datalist id="sizes">{% for s in sizes %}<option value="{{ s }}">{% endfor %}</datalist>
+  <div class="actions">
+    <button type="submit" class="primary">Speichern</button>
+    {% if article %}<a href="{% url 'article_list' %}">Abbrechen</a>{% endif %}
+  </div>
+</form>
+{% else %}
+  <p class="muted">Kategorie wählen, die App schlägt dann die nächste freie Nummer vor.</p>
+{% endif %}
+{% endblock %}

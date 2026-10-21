@@ -1,0 +1,117 @@
+/* Börse EC Thun – ruhig, gross genug für die Kasse, Eisblau als Akzent */
+:root {
+  --bg: #f6f8fb;
+  --surface: #ffffff;
+  --ink: #1e293b;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --accent: #1d4ed8;
+  --accent-soft: #e0e9ff;
+  --ok: #15803d;
+  --warn: #b45309;
+  --danger: #b91c1c;
+  --radius: 10px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; display: flex; min-height: 100vh; background: var(--bg); }
+a { color: var(--accent); }
+h1 { font-size: 1.75rem; margin: 0 0 1rem; }
+h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; }
+.muted { color: var(--muted); }
+.pre { white-space: pre-line; }
+
+/* Navigation */
+.sidebar {
+  width: 190px; flex-shrink: 0; padding: 1.25rem 0.75rem; background: var(--surface);
+  border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 0.25rem;
+  position: sticky; top: 0; height: 100vh;
+}
+.sidebar .brand { font-weight: 700; font-size: 1.15rem; line-height: 1.2; color: var(--ink); text-decoration: none; padding: 0 0.75rem 1rem; }
+.sidebar a, .sidebar .soon { display: block; padding: 0.6rem 0.75rem; border-radius: 8px; text-decoration: none; color: var(--ink); }
+.sidebar a:hover { background: var(--bg); }
+.sidebar a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.sidebar .soon { color: #a0aec0; cursor: default; }
+.sidebar .secondary { margin-top: auto; color: var(--muted); }
+
+main { flex: 1; padding: 1.75rem 2rem 3rem; max-width: 1200px; min-width: 0; }
+
+/* Meldungen */
+.messages { list-style: none; padding: 0; margin: 0 0 1.25rem; display: grid; gap: 0.5rem; }
+.messages li { padding: 0.7rem 1rem; border-radius: 8px; background: var(--accent-soft); }
+.messages .success { background: #dcfce7; color: #14532d; }
+.messages .warning { background: #fef3c7; color: #78350f; }
+.messages .error { background: #fee2e2; color: #7f1d1d; }
+.notice { padding: 0.75rem 1rem; border-radius: 8px; background: #fef3c7; color: #78350f; }
+
+/* Kennzahlen */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.25rem; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; }
+.stat-value { font-size: 1.8rem; font-weight: 700; }
+.stat-label { color: var(--muted); }
+
+/* Kategorie-Knöpfe */
+.category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.75rem; }
+.category-button {
+  display: flex; flex-direction: column; gap: 0.2rem; padding: 0.9rem 1rem; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--cat);
+  text-decoration: none; color: var(--ink); min-height: 96px;
+}
+.category-button:hover { box-shadow: 0 2px 8px rgb(15 23 42 / 0.08); }
+.category-code { font-weight: 700; color: var(--cat); font-size: 1.3rem; }
+.category-name { font-weight: 600; }
+.category-count { color: var(--muted); font-size: 0.9rem; margin-top: auto; }
+.category-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.25rem; }
+.chip { padding: 0.4rem 0.75rem; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); text-decoration: none; color: var(--ink); font-size: 0.92rem; }
+.chip.active { background: var(--cat); border-color: var(--cat); color: #fff; font-weight: 600; }
+
+/* Formulare */
+.form { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.25rem 1.5rem; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem 1.25rem; }
+.field { display: flex; flex-direction: column; gap: 0.3rem; }
+.field-description, .field-notes, .field-address { grid-column: 1 / -1; }
+label { font-weight: 600; font-size: 0.95rem; }
+small { color: var(--muted); font-size: 0.85rem; }
+input, select, textarea, button, .button {
+  font: inherit; padding: 0.55rem 0.7rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: var(--ink);
+}
+input[type="checkbox"], input[type="radio"] { width: 1.1rem; height: 1.1rem; padding: 0; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+.has-error input, .has-error select { border-color: var(--danger); }
+.errorlist { list-style: none; margin: 0; padding: 0; color: var(--danger); font-size: 0.9rem; }
+.actions { display: flex; align-items: center; gap: 1rem; margin-top: 1.25rem; }
+button, .button { cursor: pointer; text-decoration: none; display: inline-block; }
+button.primary, .button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; padding: 0.65rem 1.4rem; }
+button.primary:hover, .button.primary:hover { background: #1e40af; }
+.title-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.title-row h1 { margin: 0 auto 0 0; }
+.filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.filters input[type="search"] { flex: 1; min-width: 260px; }
+
+/* Tabellen */
+.table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.table th, .table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.table thead th { background: #f1f5f9; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+.table tbody tr:hover { background: #f8fafc; }
+.table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table.summary { max-width: 520px; margin-bottom: 1.5rem; }
+.table.summary th { font-weight: 500; }
+
+.status { padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.85rem; white-space: nowrap; background: #e2e8f0; }
+.status-lager { background: #e0f2fe; color: #075985; }
+.status-verkauft { background: #fef3c7; color: #78350f; }
+.status-ausbezahlt { background: #dcfce7; color: #14532d; }
+.badge { font-size: 0.8rem; padding: 0.1rem 0.45rem; border-radius: 6px; background: #f3e8ff; color: #6b21a8; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.card p { margin: 0.25rem 0; }
+
+/* Import-Vorschau */
+.issue { border: 1px solid var(--line); border-radius: var(--radius); padding: 0.75rem 1rem 1rem; margin: 0 0 0.75rem; }
+.issue legend { font-weight: 700; padding: 0 0.35rem; }
+.issue p { margin: 0.25rem 0 0.6rem; }
+.issue .choice { display: flex; gap: 0.5rem; align-items: flex-start; font-weight: 400; margin: 0.35rem 0; }
+.issue-range, .issue-no_number, .issue-unknown_category, .issue-no_owner { background: #f8fafc; }

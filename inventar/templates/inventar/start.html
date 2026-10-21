@@ -1,0 +1,31 @@
+{% extends "inventar/base.html" %}
+{% load boerse %}
+{% block content %}
+<h1>Guten Tag, Stephanie</h1>
+
+<section class="stats">
+  <a class="stat" href="{% url 'article_list' %}">
+    <span class="stat-value">{{ stock_count }}</span>
+    <span class="stat-label">Artikel an Lager · CHF {{ stock_value|chf }}</span>
+  </a>
+  <a class="stat" href="{% url 'article_list' %}?status=verkauft">
+    <span class="stat-value">{{ open_payout_count }}</span>
+    <span class="stat-label">offen auszuzahlen · CHF {{ open_payout_sum|chf }}</span>
+  </a>
+  <a class="stat" href="{% url 'person_list' %}">
+    <span class="stat-value">{{ person_count }}</span>
+    <span class="stat-label">Personen in der Kundendatei</span>
+  </a>
+</section>
+
+<h2>Artikel erfassen</h2>
+<div class="category-grid">
+  {% for category in categories %}
+    <a class="category-button" style="--cat: {{ category.color }}" href="{% url 'article_create' %}?kategorie={{ category.code }}">
+      <span class="category-code">{{ category.code }}</span>
+      <span class="category-name">{{ category.name }}</span>
+      <span class="category-count">{{ category.in_stock }} an Lager</span>
+    </a>
+  {% endfor %}
+</div>
+{% endblock %}

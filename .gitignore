@@ -1,0 +1,10 @@
+# Stephanies Originaldaten (Personendaten!) – nie ins Repo
+material/
+# Lokale Daten der App (Datenbank, Sicherungen, Import-Zwischenstände)
+data/
+*.sqlite3
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/

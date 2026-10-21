@@ -1,0 +1,3 @@
+# Eigenes App-Fenster (pywebview); ohne öffnet app.py den Browser
+-r requirements.txt
+pywebview>=5.0

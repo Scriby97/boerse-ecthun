@@ -1,0 +1,32 @@
+{% extends "inventar/base.html" %}
+{% load boerse %}
+{% block title %}Kunden – Börse EC Thun{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Kunden</h1>
+  <a class="button primary" href="{% url 'person_create' %}">Neue Person</a>
+</div>
+<form method="get" class="filters">
+  <input type="search" name="q" value="{{ q }}" placeholder="Name, Telefon, Mail, Notiz" aria-label="Suchen" autofocus>
+  <button type="submit">Suchen</button>
+</form>
+<table class="table">
+  <thead>
+    <tr><th>Name</th><th>Telefon</th><th>TWINT</th><th class="num">an Lager</th><th class="num">verkauft</th><th class="num">offen auszuzahlen</th></tr>
+  </thead>
+  <tbody>
+    {% for p in persons %}
+      <tr>
+        <td><a href="{% url 'person_detail' p.pk %}">{{ p.name }}</a></td>
+        <td>{{ p.phone }}</td>
+        <td>{% if p.twint %}ja{% endif %}</td>
+        <td class="num">{{ p.in_stock }}</td>
+        <td class="num">{{ p.sold }}</td>
+        <td class="num">{% if p.open_payout %}{{ p.open_payout|chf }}{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="muted">Keine Personen gefunden.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

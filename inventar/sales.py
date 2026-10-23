@@ -27,7 +27,7 @@ class SaleError(Exception):
 
 @transaction.atomic
 def create_sale(entries: list[dict], buyer: Person | None = None, payment: str = Sale.Payment.CASH,
-                date: dt.date | None = None, adjust_stock: bool = True) -> Sale:
+                date: dt.date | None = None, adjust_stock: bool = True, source: str = "kasse") -> Sale:
     """Legt den Verkauf mit allen Posten an. entries = Warenkorb der Kasse (siehe views_kasse).
 
     adjust_stock=False: Clubverkauf nachtragen, der schon vor dem Zählen des Bestands war.
@@ -36,7 +36,7 @@ def create_sale(entries: list[dict], buyer: Person | None = None, payment: str =
         raise SaleError("Der Warenkorb ist leer.")
     settings = AppSettings.load()
     sale = Sale.objects.create(number=Sale.next_number(), date=date or timezone.localdate(), buyer=buyer,
-                               payment=payment)
+                               payment=payment, source=source)
     for entry in entries:
         price = Decimal(entry["price"])
         kind = entry["kind"]

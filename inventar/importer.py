@@ -14,7 +14,8 @@ from pathlib import Path
 from django.db import transaction
 from django.utils import timezone
 
-from .models import AppSettings, Article, Category, Payout, Person, Sale
+from . import club_import
+from .models import AppSettings, Article, Category, ClubStatement, Payout, Person, Sale
 from .money import split
 from .normalize import (
     header_key,
@@ -58,7 +59,8 @@ class ImportFehler(Exception):
 
 def ensure_import_allowed() -> None:
     """Der Import ersetzt den ganzen Bestand – nur solange in der App noch nichts verkauft oder ausbezahlt wurde."""
-    if Sale.objects.exists() or Payout.objects.exists():
+    # Aus der Import-Datei übernommene Clubverkäufe ersetzt ein neuer Import; echte Kassenverkäufe nicht
+    if Sale.objects.exclude(source="import").exists() or Payout.objects.exists():
         raise ImportFehler(
             "In der App gibt es schon Verkäufe oder Auszahlungen. Ein Import würde sie überschreiben "
             "und ist deshalb gesperrt."
@@ -68,17 +70,39 @@ def ensure_import_allowed() -> None:
 # --- 1. Lesen -------------------------------------------------------------------------------------
 
 
-def read_rows(path: Path) -> list[list]:
+def _tables(path: Path):
     suffix = path.suffix.lower()
     if suffix == ".numbers":
-        tables = _numbers_tables(path)
-    elif suffix == ".xlsx":
-        tables = _excel_tables(path)
-    elif suffix == ".csv":
-        tables = [_csv_rows(path)]
-    else:
-        raise ImportFehler("Bitte eine Numbers-, Excel- oder CSV-Datei wählen.")
-    for rows in tables:
+        return _numbers_tables(path)
+    if suffix == ".xlsx":
+        return _excel_tables(path)
+    if suffix == ".csv":
+        return [_csv_rows(path)]
+    raise ImportFehler("Bitte eine Numbers-, Excel- oder CSV-Datei wählen.")
+
+
+def read_club(path: Path) -> dict | None:
+    """Blätter «Clubbestand» und «Clubverkäufe» der Import-Datei, falls vorhanden (JSON-fähig)."""
+    stock, club_sales = None, None
+    for rows in _tables(path):
+        for start, row in enumerate(rows[:5]):
+            if stock is None and club_import.is_stock_header(row):
+                stock = club_import.parse_stock_rows(rows[start:])
+                break
+            if club_sales is None and club_import.is_sales_header(row):
+                club_sales = club_import.parse_rows(rows[start:])
+                break
+    if stock is None and club_sales is None:
+        return None
+    return {
+        "stock": [dict(r, customer_price=str(r["customer_price"]), club_price=str(r["club_price"])) for r in stock or []],
+        "sales": [dict(r, date=r["date"].isoformat(), price=str(r["price"]), club_amount=str(r["club_amount"]))
+                  for r in club_sales or []],
+    }
+
+
+def read_rows(path: Path) -> list[list]:
+    for rows in _tables(path):
         if _find_header(rows) is not None:
             return rows
     raise ImportFehler("In der Datei gibt es keine Tabelle mit der Spalte «Inventar-Nr».")
@@ -288,6 +312,9 @@ def apply(result: dict, decisions: dict[str, str]) -> dict:
     decisions: Issue-ID → Entscheidung (behaltene Zeile, korrigierter Preis/Datum, gewählter Kontakt).
     """
     ensure_import_allowed()
+    # Früher importierte Clubverkäufe und ihre Quittungen werden durch die Datei ersetzt
+    Sale.objects.filter(source="import").delete()
+    ClubStatement.objects.all().delete()
     articles = [dict(a) for a in result["articles"]]
     people = result["people"]
     renumber: set[int] = set()
@@ -383,7 +410,23 @@ def apply(result: dict, decisions: dict[str, str]) -> dict:
         created += 1
         renumbered.append((a["number"], number, a["description"]))
 
+    club = result.get("club")
+    club_stats = {"stock": 0, "sales": 0}
+    if club:
+        if club["stock"]:
+            club_stats["stock"] = club_import.replace_stock([
+                dict(r, customer_price=Decimal(r["customer_price"]), club_price=Decimal(r["club_price"]))
+                for r in club["stock"]
+            ])
+        if club["sales"]:
+            club_stats["sales"] = club_import.import_rows([
+                dict(r, date=dt.date.fromisoformat(r["date"]), price=Decimal(r["price"]),
+                     club_amount=Decimal(r["club_amount"]))
+                for r in club["sales"]
+            ])["created"]
+
     return {
+        "club": club_stats,
         "articles": created,
         "persons": len(persons),
         "renumbered": renumbered,

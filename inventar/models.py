@@ -221,6 +221,9 @@ class Sale(models.Model):
         Person, models.SET_NULL, null=True, blank=True, related_name="sales", verbose_name="Käuferin"
     )
     payment = models.CharField("Bezahlt mit", max_length=10, choices=Payment.choices, default=Payment.CASH)
+    # «import»: aus der Import-Datei übernommen (frühere Clubverkäufe); ein neuer Import ersetzt sie
+    source = models.CharField("Herkunft", max_length=10, default="kasse",
+                              choices=[("kasse", "Kasse"), ("import", "Import")])
     cancelled_at = models.DateTimeField("Storniert am", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

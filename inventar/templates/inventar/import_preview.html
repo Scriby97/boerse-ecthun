@@ -17,6 +17,10 @@
     <tr><th>leere Zeilen (werden weggelassen)</th><td class="num">{{ summary.empty_rows }}</td></tr>
     <tr><th>Wert aller Artikel</th><td class="num">CHF {{ summary.value|chf }}</td></tr>
     <tr><th>Wert der verkauften Artikel</th><td class="num">CHF {{ summary.sold_value|chf }}</td></tr>
+    {% if result.club %}
+      <tr><th>Clubbestand (Positionen)</th><td class="num">{{ result.club.stock|length }}</td></tr>
+      <tr><th>Clubverkäufe</th><td class="num">{{ result.club.sales|length }}</td></tr>
+    {% endif %}
   </tbody>
 </table>
 

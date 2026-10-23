@@ -54,3 +54,57 @@ class ClubImportTests(TestCase):
         self.assertContains(response, "4 Clubverkäufe übernommen, davon 2 schon beglichen")
         self.assertContains(response, "Beispiel Diana")
         self.assertContains(response, "Verkaufte Clubartikel (4)")
+
+
+class ImportFileWithClubSheetsTests(TestCase):
+    """Eine Import-Datei mit drei Blättern: Liste, Clubbestand, Clubverkäufe."""
+
+    def write_file(self):
+        import tempfile
+        from pathlib import Path
+
+        from openpyxl import Workbook
+
+        from .test_import import sample_rows
+
+        workbook = Workbook()
+        liste = workbook.active
+        liste.title = "Komplette Liste"
+        for row in sample_rows():
+            liste.append(row)
+        bestand = workbook.create_sheet("Clubbestand")
+        for row in [["Artikel", "Grösse", "Preis Kunde", "an Club", "Bestand"],
+                    ["Clubjacke neu", "XS", 95, 92.7, 6], ["Jacke Mondor", "L", 65, 65, 1]]:
+            bestand.append(row)
+        verkaeufe = workbook.create_sheet("Clubverkäufe")
+        for row in [line.split(";") for line in CSV.strip().splitlines()]:
+            verkaeufe.append(row)
+        path = Path(tempfile.mkdtemp()) / "Basis.xlsx"
+        workbook.save(path)
+        return path
+
+    def run_import(self):
+        from inventar import importer
+        from inventar.models import Category
+
+        path = self.write_file()
+        result = importer.analyze(importer.read_rows(path), {c.code: c.start_number for c in Category.objects.all()})
+        result["club"] = importer.read_club(path)
+        return importer.apply(result, {})
+
+    def test_alles_aus_einer_datei(self):
+        stats = self.run_import()
+        self.assertEqual(stats["articles"], 6)
+        self.assertEqual(stats["club"], {"stock": 2, "sales": 4})
+        self.assertEqual(ClubItem.objects.get(name="Clubjacke neu", size="XS").stock, 6)
+        self.assertFalse(ClubItem.objects.filter(name="Jacke Männer Jiv").exists(), "alter Bestand ersetzt")
+        self.assertEqual(sales.open_club_items().count(), 2)
+        self.assertEqual(ClubStatement.objects.count(), 1)
+
+    def test_erneuter_import_ersetzt_importierte_clubverkaeufe(self):
+        from inventar.models import Sale
+
+        self.run_import()
+        self.run_import()
+        self.assertEqual(Sale.objects.filter(source="import").count(), 4)
+        self.assertEqual(ClubStatement.objects.count(), 1)

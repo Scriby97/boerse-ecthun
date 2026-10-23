@@ -10,8 +10,8 @@ def text(value) -> str:
     """Zellwert als sauberer Text (140.0 → «140»; Umlaute vom Mac vereinheitlicht)."""
     if value is None:
         return ""
-    if isinstance(value, float) and value.is_integer():
-        value = int(value)
+    if isinstance(value, float) and abs(value - round(value)) < 1e-6:
+        value = int(round(value))
     return unicodedata.normalize("NFC", str(value)).strip()
 
 
@@ -29,7 +29,9 @@ def to_int(value) -> int | None:
     if isinstance(value, bool):
         return None
     if isinstance(value, (int, float)):
-        return int(value) if float(value).is_integer() else None
+        # Tabellen speichern ganze Zahlen manchmal minimal ungenau (12.000000000000002)
+        nearest = round(value)
+        return int(nearest) if abs(value - nearest) < 1e-6 else None
     t = text(value)
     return int(t) if t.isdigit() else None
 

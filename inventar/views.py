@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from . import importer, sales, updates
+from . import club_import, importer, sales, updates
 from .backup import backup_database, backup_is_stale, ensure_daily_backup, last_backup_time
 from .forms import ArticleForm, ImportUploadForm, PersonForm
 from .models import Article, Category, Payout, Person, Sale
@@ -234,7 +234,8 @@ def import_upload(request):
                     out.write(chunk)
             rows = importer.read_rows(tmp)
             result = importer.analyze(rows, {c.code: c.start_number for c in Category.objects.all()})
-        except importer.ImportFehler as error:
+            result["club"] = importer.read_club(tmp)
+        except (importer.ImportFehler, club_import.ClubImportFehler) as error:
             form.add_error("file", str(error))
         except Exception:
             log.exception("Import fehlgeschlagen")
@@ -277,6 +278,9 @@ def import_preview(request, token):
             messages.info(request, f"Neue Nummer {new} (vorher {old or 'keine'}): {description}")
         if stats["skipped"]:
             messages.warning(request, f"{stats['skipped']} Artikel ohne bekannte Kategorie übersprungen.")
+        if stats["club"]["stock"] or stats["club"]["sales"]:
+            messages.info(request, f"Club EC Thun: {stats['club']['stock']} Positionen Bestand und "
+                                   f"{stats['club']['sales']} Clubverkäufe übernommen.")
         return redirect("article_list")
     return render(
         request,

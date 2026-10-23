@@ -47,6 +47,8 @@ class NormalizeTests(SimpleTestCase):
         self.assertIsNone(to_date("irgendwann"))
         self.assertEqual(to_int(1096.0), 1096)
         self.assertIsNone(to_int(10.5))
+        self.assertEqual(to_int(12.000000000000002), 12)
+        self.assertEqual(to_int(13.999999999999998), 14)
 
     def test_aufteilung_65_35_auf_5_rappen(self):
         self.assertEqual(split(Decimal("45"), Decimal("65")), (Decimal("29.25"), Decimal("15.75")))

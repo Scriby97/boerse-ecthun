@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
-from . import backup, exports, sales
+from . import backup, club_import, exports, sales
 from .forms import ClubBackfillForm, ClubItemForm, ClubStatementForm, SettingsForm
 from .models import AppSettings, ClubItem, ClubStatement, Payout, Person, SaleItem
 from .pdf import club_statement_pdf, labels_pdf, payout_pdf
@@ -42,7 +42,32 @@ def club_items(request):
         "statements": ClubStatement.objects.all(),
         "statement_form": ClubStatementForm(initial={"end_date": sales.default_statement_end()}),
         "backfill_form": ClubBackfillForm(initial={"date": timezone.localdate()}),
+        "sold_items": SaleItem.objects.filter(kind=SaleItem.Kind.CLUB, sale__cancelled_at__isnull=True)
+        .select_related("sale", "sale__buyer", "club_statement")
+        .order_by("-sale__date", "-pk"),
     })
+
+
+@require_POST
+def club_import_csv(request):
+    upload = request.FILES.get("file")
+    if not upload:
+        messages.error(request, "Bitte eine CSV-Datei wählen.")
+        return redirect("club_items")
+    try:
+        content = upload.read().decode("utf-8-sig")
+        stats = club_import.import_rows(club_import.parse(content))
+    except UnicodeDecodeError:
+        messages.error(request, "Die Datei ist nicht als UTF-8 gespeichert.")
+    except club_import.ClubImportFehler as error:
+        messages.error(request, str(error))
+    else:
+        messages.success(
+            request,
+            f"{stats['created']} Clubverkäufe übernommen, davon {stats['settled']} schon abgerechnet"
+            + (f"; {stats['skipped']} waren schon da" if stats["skipped"] else "") + ".",
+        )
+    return redirect("club_items")
 
 
 @require_POST

@@ -38,6 +38,28 @@
 </table>
 {% endif %}
 
+<h2>Verkaufte Clubartikel ({{ sold_items|length }})</h2>
+{% if sold_items %}
+<table class="table">
+  <thead><tr><th>Datum</th><th>Artikel</th><th>Grösse</th><th>Käuferin</th><th class="num">Preis</th><th class="num">an Club</th><th>Abrechnung</th></tr></thead>
+  <tbody>
+    {% for i in sold_items %}
+      <tr>
+        <td><a href="{% url 'sale_detail' i.sale_id %}">{{ i.sale.date|date:"j.n.Y" }}</a></td>
+        <td>{{ i.description }}</td>
+        <td>{{ i.size }}</td>
+        <td>{{ i.sale.buyer.name|default:"" }}</td>
+        <td class="num">{{ i.price|chf }}</td>
+        <td class="num">{{ i.club_amount|chf }}</td>
+        <td>{% if i.club_statement %}<a href="{% url 'club_statement_pdf' i.club_statement.pk %}">per {{ i.club_statement.end_date|date:"j.n.Y" }}</a>{% else %}<span class="status status-verkauft">offen</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p class="muted">Noch keine Clubverkäufe in der App.</p>
+{% endif %}
+
 <h2>Bestand Clubbekleidung</h2>
 <p class="muted">Bestand pro Artikel und Grösse. Jeder Verkauf an der Kasse zählt eins herunter.</p>
 <table class="table">
@@ -79,6 +101,16 @@
       {% endfor %}
     </div>
     <div class="actions"><button type="submit">Nachtragen</button></div>
+  </form>
+</details>
+
+<details class="extra">
+  <summary>Frühere Clubverkäufe aus einer Datei übernehmen (CSV)</summary>
+  <p class="muted">Spalten: Datum; Artikel; Grösse; Käuferin; Preis; an Club; abgerechnet (ja, wenn schon mit dem Club abgerechnet). Der Bestand ändert sich nicht, schon übernommene Verkäufe werden übersprungen.</p>
+  <form method="post" action="{% url 'club_import_csv' %}" enctype="multipart/form-data" class="inline-form">
+    {% csrf_token %}
+    <input type="file" name="file" accept=".csv,text/csv" aria-label="CSV-Datei">
+    <button type="submit">Übernehmen</button>
   </form>
 </details>
 {% endblock %}

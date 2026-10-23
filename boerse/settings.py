@@ -10,6 +10,9 @@ from .paths import data_dir, secret_key
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = data_dir()
 BACKUP_DIR = DATA_DIR / "Sicherungen"
+# Desktop-App (app.py): PDFs und Excel-Dateien landen hier und werden direkt geöffnet (siehe inventar/delivery.py)
+DESKTOP = os.environ.get("BOERSE_DESKTOP") == "1"
+EXPORT_DIR = Path.home() / "Documents" / "Börse EC Thun"
 AUTO_BACKUP = True
 if sys.argv[1:2] == ["test"]:
     # Tests laufen in einer offenen Transaktion; eine automatische Kopie würde darauf warten

@@ -3,24 +3,18 @@
 from decimal import Decimal
 
 from django.contrib import messages
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
 from . import backup, club_import, exports, sales
+from .delivery import PDF, XLSX, deliver
 from .forms import ClubBackfillForm, ClubItemForm, SettingsForm
 from .models import AppSettings, ClubItem, ClubStatement, Payout, Person, SaleItem
 from .pdf import club_receipt_pdf, club_statement_pdf, labels_pdf, payout_pdf
 from .views import filter_articles
 
 MAX_LABELS = 500
-
-
-def _download(content: bytes, content_type: str, filename: str, inline: bool = False) -> HttpResponse:
-    response = HttpResponse(content, content_type=content_type)
-    response["Content-Disposition"] = f'{"inline" if inline else "attachment"}; filename="{filename}"'
-    return response
 
 
 # --- Club EC Thun ---------------------------------------------------------------------------------
@@ -103,7 +97,7 @@ def club_receipt_pdf_view(request):
         return redirect("club_items")
     today = timezone.localdate()
     pdf = club_receipt_pdf(items, today, sum((i.club_amount for i in items), Decimal("0")))
-    return _download(pdf, "application/pdf", f"Clubquittung-Stand-{today:%Y-%m-%d}.pdf")
+    return deliver(request, pdf, f"Clubquittung-Stand-{today:%Y-%m-%d}.pdf", PDF)
 
 
 @require_POST
@@ -120,8 +114,8 @@ def club_settle(request):
 
 def club_statement_pdf_view(request, pk):
     statement = get_object_or_404(ClubStatement, pk=pk)
-    return _download(club_statement_pdf(statement), "application/pdf",
-                     f"Clubquittung-beglichen-{statement.end_date:%Y-%m-%d}.pdf")
+    return deliver(request, club_statement_pdf(statement),
+                   f"Clubquittung-beglichen-{statement.end_date:%Y-%m-%d}.pdf", PDF)
 
 
 @require_POST
@@ -138,7 +132,7 @@ def club_statement_delete(request, pk):
 def payout_pdf_view(request, pk):
     payout = get_object_or_404(Payout.objects.select_related("person"), pk=pk)
     name = "".join(c for c in payout.person.name if c.isalnum() or c in " -").strip().replace(" ", "-")
-    return _download(payout_pdf(payout), "application/pdf", f"Abrechnung-{name}-{payout.date:%Y-%m-%d}.pdf")
+    return deliver(request, payout_pdf(payout), f"Abrechnung-{name}-{payout.date:%Y-%m-%d}.pdf", PDF)
 
 
 # --- Etiketten ------------------------------------------------------------------------------------
@@ -150,9 +144,8 @@ def labels(request, fmt):
         messages.warning(request, "Keine Artikel für Etiketten gefunden.")
         return redirect("article_list")
     if fmt == "xlsx":
-        return _download(exports.dymo_labels(articles),
-                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Etiketten.xlsx")
-    return _download(labels_pdf(articles), "application/pdf", "Etiketten.pdf")
+        return deliver(request, exports.dymo_labels(articles), "Etiketten.xlsx", XLSX)
+    return deliver(request, labels_pdf(articles), "Etiketten.pdf", PDF)
 
 
 # --- Export ---------------------------------------------------------------------------------------
@@ -163,8 +156,7 @@ def export_page(request):
 
 
 def export_xlsx(request):
-    return _download(exports.full_export(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                     f"Boerse-EC-Thun-{timezone.localdate():%Y-%m-%d}.xlsx")
+    return deliver(request, exports.full_export(), f"Boerse-EC-Thun-{timezone.localdate():%Y-%m-%d}.xlsx", XLSX)
 
 
 # --- Einstellungen und Sicherungen ----------------------------------------------------------------

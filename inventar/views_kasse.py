@@ -4,7 +4,6 @@ import re
 from decimal import Decimal
 
 from django.contrib import messages
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
@@ -12,6 +11,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from . import reports, sales
 from .forms import CheckoutForm, ClubItemForm, ClubSaleForm, OtherItemForm, PayoutForm
 from .models import AppSettings, Article, ClubItem, Payout, Person, Sale, SaleItem
+from .delivery import PDF, deliver
 from .pdf import receipt_pdf
 
 CART = "kasse"
@@ -212,9 +212,7 @@ def sale_detail(request, pk):
 
 def sale_receipt(request, pk):
     sale = get_object_or_404(Sale, pk=pk)
-    response = HttpResponse(receipt_pdf(sale, AppSettings.load()), content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="Quittung-{sale.number}.pdf"'
-    return response
+    return deliver(request, receipt_pdf(sale, AppSettings.load()), f"Quittung-{sale.number}.pdf", PDF)
 
 
 @require_POST

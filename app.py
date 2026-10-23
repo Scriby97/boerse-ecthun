@@ -65,6 +65,19 @@ def selftest() -> int:
         ok = response.status_code == 200 and expected in content[:200000]
         failed += not ok
         print(f"  {'ok ' if ok else 'FEHLER'} {name} ({response.status_code})")
+    # Desktop-Weg: Datei speichern statt Download (das Öffnen in Vorschau wird hier übersprungen)
+    from pathlib import Path
+    from unittest import mock
+
+    from django.test import override_settings
+
+    export_dir = Path(os.environ["BOERSE_DATA_DIR"]) / "Export"
+    with override_settings(DESKTOP=True, EXPORT_DIR=export_dir), mock.patch("inventar.delivery.open_file"):
+        response = client.get(f"/verkauf/{sale.pk}/quittung.pdf", HTTP_REFERER="http://testserver/kasse/")
+    saved = export_dir / f"Quittung-{sale.number}.pdf"
+    ok = response.status_code == 302 and saved.exists() and saved.read_bytes().startswith(b"%PDF")
+    failed += not ok
+    print(f"  {'ok ' if ok else 'FEHLER'} Datei speichern statt Download ({response.status_code})")
     print("Alles in Ordnung." if not failed else f"{failed} Prüfung(en) fehlgeschlagen.")
     return 1 if failed else 0
 
@@ -73,6 +86,8 @@ def main() -> None:
     if "--selftest" in sys.argv:
         sys.exit(selftest())
 
+    # Im App-Fenster keine Downloads: Dateien speichert und öffnet die App selbst (inventar/delivery.py)
+    os.environ["BOERSE_DESKTOP"] = "1"
     setup_django()
 
     from waitress import create_server

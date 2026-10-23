@@ -17,7 +17,7 @@ class SalesTests(TestCase):
                                             owner=self.anna, price=Decimal("45"))
         self.spende = Article.objects.create(number=10002, category=cat, description="Röckli", owner=self.anna,
                                              price=Decimal("10"), owner_share=Decimal("0"))
-        self.jacke = ClubItem.objects.get(name="Clubjacke neu")
+        self.jacke = ClubItem.objects.get(name="Clubjacke neu", size="XS")
         self.jacke.stock = 3
         self.jacke.save()
 

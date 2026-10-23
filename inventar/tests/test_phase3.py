@@ -20,8 +20,8 @@ from inventar.pdf import club_statement_pdf, labels_pdf, payout_pdf
 
 class ClubStatementTests(TestCase):
     def setUp(self):
-        self.jacke = ClubItem.objects.get(name="Clubjacke neu")
-        self.hose = ClubItem.objects.get(name="Hose EC Thun")
+        self.jacke = ClubItem.objects.get(name="Clubjacke neu", size="XS")
+        self.hose = ClubItem.objects.get(name="Hose EC Thun", size="140")
         self.jacke.stock = 5
         self.jacke.save()
 

@@ -72,7 +72,7 @@ class KasseViewTests(TestCase):
 
     def test_artikel_ohne_nummer_und_clubartikel(self):
         self.client.post(reverse("kasse_add_other"), {"description": "Haarschmuck", "price": "8"})
-        jacke = ClubItem.objects.get(name="Clubjacke neu")
+        jacke = ClubItem.objects.get(name="Clubjacke neu", size="XS")
         self.client.post(reverse("kasse_add_club"), {"club_item": jacke.pk, "size": "XS"})
         cart = self.client.session["kasse"]
         self.assertEqual([(e["kind"], e["price"]) for e in cart], [("eigen", "8.00"), ("club", "95.00")])

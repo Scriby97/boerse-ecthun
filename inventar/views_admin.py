@@ -9,9 +9,9 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
 from . import backup, club_import, exports, sales
-from .forms import ClubBackfillForm, ClubItemForm, ClubStatementForm, SettingsForm
+from .forms import ClubBackfillForm, ClubItemForm, SettingsForm
 from .models import AppSettings, ClubItem, ClubStatement, Payout, Person, SaleItem
-from .pdf import club_statement_pdf, labels_pdf, payout_pdf
+from .pdf import club_receipt_pdf, club_statement_pdf, labels_pdf, payout_pdf
 from .views import filter_articles
 
 MAX_LABELS = 500
@@ -40,7 +40,6 @@ def club_items(request):
         "open_items": open_items,
         "open_total": sum((i.club_amount for i in open_items), Decimal("0")),
         "statements": ClubStatement.objects.all(),
-        "statement_form": ClubStatementForm(initial={"end_date": sales.default_statement_end()}),
         "backfill_form": ClubBackfillForm(initial={"date": timezone.localdate()}),
         "sold_items": SaleItem.objects.filter(kind=SaleItem.Kind.CLUB, sale__cancelled_at__isnull=True)
         .select_related("sale", "sale__buyer", "club_statement")
@@ -64,7 +63,7 @@ def club_import_csv(request):
     else:
         messages.success(
             request,
-            f"{stats['created']} Clubverkäufe übernommen, davon {stats['settled']} schon abgerechnet"
+            f"{stats['created']} Clubverkäufe übernommen, davon {stats['settled']} schon beglichen"
             + (f"; {stats['skipped']} waren schon da" if stats["skipped"] else "") + ".",
         )
     return redirect("club_items")
@@ -96,40 +95,40 @@ def club_backfill(request):
     return redirect("club_items")
 
 
-@require_http_methods(["GET", "POST"])
-def club_statement_new(request):
-    form = ClubStatementForm(request.POST or request.GET or None)
-    if not form.is_valid():
-        messages.error(request, "Bitte ein Datum wählen.")
+def club_receipt_pdf_view(request):
+    """Laufende Clubquittung (noch nicht beglichen) als PDF – jederzeit zum Ansehen oder Drucken."""
+    items = list(sales.open_club_items())
+    if not items:
+        messages.warning(request, "Auf der laufenden Clubquittung steht noch nichts.")
         return redirect("club_items")
-    end_date = form.cleaned_data["end_date"]
-    if request.method == "POST":
-        try:
-            statement = sales.create_club_statement(end_date)
-        except sales.SaleError as error:
-            messages.error(request, str(error))
-            return redirect("club_items")
-        messages.success(request, f"Clubabrechnung per {end_date:%d.%m.%Y} erstellt: CHF {statement.total:.2f}.")
-        return redirect("club_items")
-    items = sales.open_club_items(end_date)
-    return render(request, "inventar/club_statement_new.html", {
-        "end_date": end_date,
-        "items": items,
-        "total": sum((i.club_amount for i in items), Decimal("0")),
-    })
+    today = timezone.localdate()
+    pdf = club_receipt_pdf(items, today, sum((i.club_amount for i in items), Decimal("0")))
+    return _download(pdf, "application/pdf", f"Clubquittung-Stand-{today:%Y-%m-%d}.pdf")
+
+
+@require_POST
+def club_settle(request):
+    """«Begleichen»: laufende Quittung abschliessen; die nächsten Clubverkäufe kommen auf eine neue."""
+    try:
+        statement = sales.create_club_statement(timezone.localdate())
+    except sales.SaleError as error:
+        messages.error(request, str(error))
+    else:
+        messages.success(request, f"Clubquittung über CHF {statement.total:.2f} beglichen. Eine neue Quittung ist gestartet.")
+    return redirect("club_items")
 
 
 def club_statement_pdf_view(request, pk):
     statement = get_object_or_404(ClubStatement, pk=pk)
     return _download(club_statement_pdf(statement), "application/pdf",
-                     f"Clubabrechnung-{statement.end_date:%Y-%m-%d}.pdf")
+                     f"Clubquittung-beglichen-{statement.end_date:%Y-%m-%d}.pdf")
 
 
 @require_POST
 def club_statement_delete(request, pk):
     statement = get_object_or_404(ClubStatement, pk=pk)
     sales.delete_club_statement(statement)
-    messages.success(request, "Clubabrechnung gelöscht. Die Posten sind wieder offen.")
+    messages.success(request, "Die Quittung ist wieder offen; ihre Posten stehen auf der laufenden Clubquittung.")
     return redirect("club_items")
 
 

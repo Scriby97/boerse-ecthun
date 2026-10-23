@@ -51,6 +51,6 @@ class ClubImportTests(TestCase):
     def test_ueber_die_seite(self):
         response = self.client.post(reverse("club_import_csv"),
                                     {"file": SimpleUploadedFile("club.csv", CSV.encode("utf-8"))}, follow=True)
-        self.assertContains(response, "4 Clubverkäufe übernommen, davon 2 schon abgerechnet")
+        self.assertContains(response, "4 Clubverkäufe übernommen, davon 2 schon beglichen")
         self.assertContains(response, "Beispiel Diana")
         self.assertContains(response, "Verkaufte Clubartikel (4)")

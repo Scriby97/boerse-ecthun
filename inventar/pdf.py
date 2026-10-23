@@ -90,10 +90,16 @@ def _date(value) -> str:
 
 
 def club_statement_pdf(statement: ClubStatement, settings: AppSettings | None = None) -> bytes:
-    """Clubabrechnung (A4) im Aufbau der bisherigen Pages-Quittung."""
+    """Beglichene Clubquittung."""
+    items = statement.items.select_related("sale", "sale__buyer").order_by("sale__date", "pk")
+    return club_receipt_pdf(list(items), statement.end_date, statement.total, settings, settled=True)
+
+
+def club_receipt_pdf(items, date, total, settings: AppSettings | None = None, settled: bool = False) -> bytes:
+    """Clubquittung (A4) im Aufbau der bisherigen Pages-Quittung – laufend oder beglichen."""
     settings = settings or AppSettings.load()
     pdf = FPDF(format="A4")
-    pdf.set_title(latin1(f"Clubabrechnung per {statement.end_date:%d.%m.%Y}"))
+    pdf.set_title(latin1(f"Clubquittung {date:%d.%m.%Y}"))
     pdf.set_author(latin1(settings.owner_name))
     pdf.set_margins(20, 15, 20)
     pdf.set_auto_page_break(True, margin=20)
@@ -114,12 +120,12 @@ def club_statement_pdf(statement: ClubStatement, settings: AppSettings | None = 
     pdf.ln(4)
     pdf.set_font("Helvetica", "", 9)
     pdf.set_text_color(*MUTED)
-    pdf.cell(0, 5, latin1(f"Abrechnung per {_date(statement.end_date)}"), new_x="LMARGIN", new_y="NEXT")
+    status = f"Beglichen am {_date(date)}" if settled else f"Laufende Quittung, Stand {_date(date)}"
+    pdf.cell(0, 5, latin1(status), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(3)
 
     pdf.set_text_color(*NAVY)
     pdf.set_font("Helvetica", "", 10)
-    items = statement.items.select_related("sale", "sale__buyer").order_by("sale__date", "pk")
     payee = [line.strip() for line in settings.club_payee.splitlines() if line.strip()]
     with pdf.table(
         col_widths=(width * 0.22, width * 0.58, width * 0.20),
@@ -138,14 +144,14 @@ def club_statement_pdf(statement: ClubStatement, settings: AppSettings | None = 
             row.cell(_date(item.sale.date))
             row.cell(latin1(what))
             row.cell(chf(item.club_amount))
-        total = table.row()
-        total.cell("")
-        total.cell(latin1("\n".join(["Total Überweisung auf Konto", *payee])))
-        total.cell(chf(statement.total))
+        last = table.row()
+        last.cell("")
+        last.cell(latin1("\n".join(["Total Überweisung auf Konto", *payee])))
+        last.cell(chf(total))
 
     pdf.ln(8)
     pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 6, latin1(f"{settings.place}, {_date(statement.created_at)}"), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, latin1(f"{settings.place}, {_date(date)}"), new_x="LMARGIN", new_y="NEXT")
     return bytes(pdf.output())
 
 

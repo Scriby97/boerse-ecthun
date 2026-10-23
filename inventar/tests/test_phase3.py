@@ -65,16 +65,28 @@ class ClubStatementTests(TestCase):
         sales.delete_club_statement(statement)
         self.assertEqual(sales.open_club_items().count(), 1)
 
-    def test_vorschau_und_erstellen_ueber_die_seite(self):
+    def test_laufende_quittung_begleichen_und_neue_starten(self):
         self.backfill(self.jacke, "2026-07-13", "Käuferin Diana")
         page = self.client.get(reverse("club_items"))
-        self.assertContains(page, "92.70")
-        preview = self.client.get(reverse("club_statement_new"), {"end_date": "2026-12-31"})
-        self.assertContains(preview, "Käuferin Diana")
-        self.client.post(reverse("club_statement_new"), {"end_date": "2026-12-31"})
+        self.assertContains(page, "Laufende Clubquittung")
+        self.assertContains(page, "Käuferin Diana")
+        pdf = self.client.get(reverse("club_receipt_pdf"))
+        self.assertEqual(pdf["Content-Type"], "application/pdf")
+
+        response = self.client.post(reverse("club_settle"), follow=True)
+        self.assertContains(response, "Clubquittung über CHF 92.70 beglichen")
         statement = ClubStatement.objects.get()
-        response = self.client.get(reverse("club_statement_pdf", args=[statement.pk]))
-        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertEqual(statement.total, Decimal("92.70"))
+        self.assertEqual(sales.open_club_items().count(), 0)
+        self.assertContains(response, "Noch keine Clubverkäufe auf der laufenden Quittung")
+        self.assertEqual(self.client.get(reverse("club_statement_pdf", args=[statement.pk]))["Content-Type"],
+                         "application/pdf")
+
+        # Nächster Verkauf landet auf der neuen Quittung
+        self.backfill(self.hose, "2026-12-01", "Käuferin Berta", "140")
+        self.assertEqual(sales.open_club_items().count(), 1)
+        self.client.post(reverse("club_statement_delete", args=[statement.pk]))
+        self.assertEqual(sales.open_club_items().count(), 2, "wieder geöffnet")
 
 
 class DocumentTests(TestCase):

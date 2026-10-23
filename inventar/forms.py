@@ -123,10 +123,6 @@ class ClubBackfillForm(forms.Form):
                                      required=False, help_text="Leer = Betrag aus der Liste")
 
 
-class ClubStatementForm(forms.Form):
-    end_date = forms.DateField(label="Abrechnung per", widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
-
-
 class SettingsForm(forms.ModelForm):
     class Meta:
         model = AppSettings

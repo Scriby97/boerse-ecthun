@@ -35,7 +35,8 @@ urlpatterns = [
     path("club/<int:pk>/", views_kasse.club_item_edit, name="club_item_edit"),
     path("club/nachtragen/", views_admin.club_backfill, name="club_backfill"),
     path("club/import/", views_admin.club_import_csv, name="club_import_csv"),
-    path("club/abrechnung/", views_admin.club_statement_new, name="club_statement_new"),
+    path("club/quittung.pdf", views_admin.club_receipt_pdf_view, name="club_receipt_pdf"),
+    path("club/begleichen/", views_admin.club_settle, name="club_settle"),
     path("club/abrechnung/<int:pk>.pdf", views_admin.club_statement_pdf_view, name="club_statement_pdf"),
     path("club/abrechnung/<int:pk>/loeschen/", views_admin.club_statement_delete, name="club_statement_delete"),
     # Abrechnungen, Etiketten, Export, Einstellungen

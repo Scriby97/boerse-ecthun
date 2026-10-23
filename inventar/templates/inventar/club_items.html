@@ -5,31 +5,49 @@
 <h1>Club EC Thun</h1>
 
 <section class="card">
-  <h2 class="card-title">Clubabrechnung</h2>
-  <p>Noch nicht abgerechnet: <strong>{{ open_items|length }} Verkäufe · CHF {{ open_total|chf }}</strong> an den Club.</p>
-  <form method="get" action="{% url 'club_statement_new' %}" class="inline-form">
-    <label for="{{ statement_form.end_date.id_for_label }}">{{ statement_form.end_date.label }}</label>
-    {{ statement_form.end_date }}
-    <button type="submit" class="primary">Vorschau</button>
-  </form>
-  <small>Abgerechnet wird jeweils per 30.6. und 31.12. Die Vorschau zeigt alle offenen Verkäufe bis zu diesem Datum.</small>
+  <div class="title-row">
+    <h2 class="card-title">Laufende Clubquittung</h2>
+    {% if open_items %}
+      <a class="button" href="{% url 'club_receipt_pdf' %}">Quittung als PDF</a>
+      <form method="post" action="{% url 'club_settle' %}" class="inline" onsubmit="return confirm('Clubquittung über CHF {{ open_total|chf }} begleichen? Danach beginnt eine neue Quittung.')">
+        {% csrf_token %}<button type="submit" class="primary">Begleichen</button>
+      </form>
+    {% endif %}
+  </div>
+  {% if open_items %}
+    <table class="table">
+      <thead><tr><th>Datum</th><th>Was</th><th class="num">CHF</th></tr></thead>
+      <tbody>
+        {% for i in open_items %}
+          <tr>
+            <td><a href="{% url 'sale_detail' i.sale_id %}">{{ i.sale.date|date:"j.n.Y" }}</a></td>
+            <td>{{ i.description }} {{ i.size }}{% if i.sale.buyer %} ({{ i.sale.buyer.name }}){% endif %}</td>
+            <td class="num">{{ i.club_amount|chf }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr><th colspan="2">Total Überweisung an den Club</th><th class="num">{{ open_total|chf }}</th></tr></tfoot>
+    </table>
+    <small>Jeder Clubverkauf an der Kasse kommt automatisch auf diese Quittung. Zweimal im Jahr begleichen: dann kommt sie zu den beglichenen, und eine neue beginnt.</small>
+  {% else %}
+    <p class="muted">Noch keine Clubverkäufe auf der laufenden Quittung.</p>
+  {% endif %}
 </section>
 
 {% if statements %}
-<h2>Bisherige Clubabrechnungen</h2>
+<h2>Beglichen</h2>
 <table class="table">
-  <thead><tr><th>per</th><th class="num">Posten</th><th class="num">CHF</th><th>erstellt</th><th></th></tr></thead>
+  <thead><tr><th>Beglichen am</th><th class="num">Posten</th><th class="num">CHF</th><th></th></tr></thead>
   <tbody>
     {% for s in statements %}
       <tr>
         <td><a href="{% url 'club_statement_pdf' s.pk %}">{{ s.end_date|date:"j.n.Y" }}</a></td>
         <td class="num">{{ s.items.count }}</td>
         <td class="num">{{ s.total|chf }}</td>
-        <td>{{ s.created_at|date:"j.n.Y" }}</td>
         <td>
           <a href="{% url 'club_statement_pdf' s.pk %}">PDF</a>
-          <form method="post" action="{% url 'club_statement_delete' s.pk %}" class="inline" onsubmit="return confirm('Abrechnung löschen? Die Posten sind danach wieder offen.')">
-            {% csrf_token %}<button type="submit" class="link-button danger">löschen</button>
+          <form method="post" action="{% url 'club_statement_delete' s.pk %}" class="inline" onsubmit="return confirm('Diese Quittung wieder öffnen? Ihre Posten kommen zurück auf die laufende Quittung.')">
+            {% csrf_token %}<button type="submit" class="link-button">wieder öffnen</button>
           </form>
         </td>
       </tr>
@@ -41,7 +59,7 @@
 <h2>Verkaufte Clubartikel ({{ sold_items|length }})</h2>
 {% if sold_items %}
 <table class="table">
-  <thead><tr><th>Datum</th><th>Artikel</th><th>Grösse</th><th>Käuferin</th><th class="num">Preis</th><th class="num">an Club</th><th>Abrechnung</th></tr></thead>
+  <thead><tr><th>Datum</th><th>Artikel</th><th>Grösse</th><th>Käuferin</th><th class="num">Preis</th><th class="num">an Club</th><th>Clubquittung</th></tr></thead>
   <tbody>
     {% for i in sold_items %}
       <tr>
@@ -51,7 +69,7 @@
         <td>{{ i.sale.buyer.name|default:"" }}</td>
         <td class="num">{{ i.price|chf }}</td>
         <td class="num">{{ i.club_amount|chf }}</td>
-        <td>{% if i.club_statement %}<a href="{% url 'club_statement_pdf' i.club_statement.pk %}">per {{ i.club_statement.end_date|date:"j.n.Y" }}</a>{% else %}<span class="status status-verkauft">offen</span>{% endif %}</td>
+        <td>{% if i.club_statement %}<a href="{% url 'club_statement_pdf' i.club_statement.pk %}">beglichen {{ i.club_statement.end_date|date:"j.n.Y" }}</a>{% else %}<span class="status status-verkauft">laufend</span>{% endif %}</td>
       </tr>
     {% endfor %}
   </tbody>
@@ -106,7 +124,7 @@
 
 <details class="extra">
   <summary>Frühere Clubverkäufe aus einer Datei übernehmen (CSV)</summary>
-  <p class="muted">Spalten: Datum; Artikel; Grösse; Käuferin; Preis; an Club; abgerechnet (ja, wenn schon mit dem Club abgerechnet). Der Bestand ändert sich nicht, schon übernommene Verkäufe werden übersprungen.</p>
+  <p class="muted">Spalten: Datum; Artikel; Grösse; Käuferin; Preis; an Club; abgerechnet (ja, wenn schon mit dem Club beglichen). Der Bestand ändert sich nicht, schon übernommene Verkäufe werden übersprungen.</p>
   <form method="post" action="{% url 'club_import_csv' %}" enctype="multipart/form-data" class="inline-form">
     {% csrf_token %}
     <input type="file" name="file" accept=".csv,text/csv" aria-label="CSV-Datei">

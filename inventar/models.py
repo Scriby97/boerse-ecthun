@@ -102,6 +102,9 @@ class Article(models.Model):
     )
     category = models.ForeignKey(Category, models.PROTECT, related_name="articles", verbose_name="Kategorie")
     description = models.CharField("Bezeichnung", max_length=300)
+    extra_info = models.TextField(
+        "Zusatzinformation", blank=True, help_text="Z. B. Zustand, Marke, Hinweise. Erscheint nicht auf der Quittung."
+    )
     size = models.CharField("Grösse", max_length=60, blank=True)
     owner = models.ForeignKey(Person, models.PROTECT, related_name="articles", verbose_name="Besitzerin")
     price = models.DecimalField("Preis (CHF)", max_digits=8, decimal_places=2, null=True, blank=True)

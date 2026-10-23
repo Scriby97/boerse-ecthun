@@ -27,6 +27,7 @@ urlpatterns = [
     path("verkauft/", views_kasse.sale_list, name="sale_list"),
     path("verkauf/<int:pk>/", views_kasse.sale_detail, name="sale_detail"),
     path("verkauf/<int:pk>/quittung.pdf", views_kasse.sale_receipt, name="sale_receipt"),
+    path("verkauf/<int:pk>/bezeichnungen/", views_kasse.sale_descriptions, name="sale_descriptions"),
     path("verkauf/<int:pk>/stornieren/", views_kasse.sale_cancel, name="sale_cancel"),
     path("verkauf/<int:pk>/auszahlen/", views_kasse.sale_payout, name="sale_payout"),
     path("abrechnen/", views_kasse.payout_list, name="payout_list"),

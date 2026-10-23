@@ -44,6 +44,8 @@ def _article_entry(article: Article) -> dict:
         "owner": article.owner.name,
         "price": str(article.price if article.price is not None else Decimal("0.00")),
         "note": article.price_note,
+        # nur zur Information an der Kasse, kommt nicht auf die Quittung
+        "extra": article.extra_info,
     }
 
 
@@ -208,6 +210,23 @@ def sale_detail(request, pk):
         "to_pay": list(to_pay.values()),
         "methods": Payout.Method.choices,
     })
+
+
+@require_POST
+def sale_descriptions(request, pk):
+    """Bezeichnungen auf der Quittung anpassen (ändert nur die Quittung, nicht den Artikel im Inventar)."""
+    sale = get_object_or_404(Sale, pk=pk)
+    changed = 0
+    for item in sale.items.all():
+        text = " ".join(request.POST.get(f"bezeichnung-{item.pk}", "").split())
+        if text and text != item.description:
+            item.description = text[:300]
+            item.save(update_fields=["description"])
+            changed += 1
+    messages.success(request, f"{changed} Bezeichnung(en) für die Quittung angepasst." if changed else "Keine Änderung.")
+    if request.POST.get("pdf"):
+        return redirect("sale_receipt", pk=sale.pk)
+    return redirect("sale_detail", pk=sale.pk)
 
 
 def sale_receipt(request, pk):

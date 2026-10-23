@@ -59,7 +59,7 @@
           {% for e in entries %}
             <tr>
               <td>{{ e.label|default:"–" }}</td>
-              <td>{{ e.description }}<br><small>{{ e.owner }}{% if e.note %} · {{ e.note }}{% endif %}</small></td>
+              <td>{{ e.description }}<br><small>{{ e.owner }}{% if e.note %} · {{ e.note }}{% endif %}{% if e.extra %} · {{ e.extra }}{% endif %}</small></td>
               <td>{{ e.size }}</td>
               <td class="num">
                 <form method="post" action="{% url 'kasse_price' forloop.counter0 %}">

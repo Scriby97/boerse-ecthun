@@ -110,7 +110,8 @@ def filter_articles(params) -> tuple:
     }
     q = filters["q"]
     if q:
-        match = Q(description__icontains=q) | Q(size__icontains=q) | Q(owner__name__icontains=q)
+        match = (Q(description__icontains=q) | Q(extra_info__icontains=q) | Q(size__icontains=q)
+                 | Q(owner__name__icontains=q))
         if q.isdigit():
             match |= Q(number=int(q))
         articles = articles.filter(match)

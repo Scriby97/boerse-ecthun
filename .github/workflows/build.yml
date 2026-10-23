@@ -41,6 +41,10 @@ jobs:
           cache: pip
       - run: pip install -r requirements-desktop.txt pyinstaller pillow
       - run: pyinstaller --noconfirm boerse.spec
+      - name: App signieren (ad hoc), damit macOS sie nicht als «beschädigt» meldet
+        run: |
+          codesign --force --deep --sign - "dist/Börse EC Thun.app"
+          codesign --verify --deep --strict --verbose=2 "dist/Börse EC Thun.app"
       - name: Selbsttest der fertigen App
         run: '"dist/Börse EC Thun.app/Contents/MacOS/Börse EC Thun" --selftest'
       - name: ZIP erstellen

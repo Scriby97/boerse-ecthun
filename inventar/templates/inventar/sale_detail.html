@@ -27,13 +27,15 @@
   </section>
 {% endif %}
 
+<form method="post" action="{% url 'sale_descriptions' sale.pk %}">
+{% csrf_token %}
 <table class="table">
   <thead><tr><th>Nr.</th><th>Artikel</th><th>Grösse</th><th>Art</th><th class="num">CHF</th><th class="num">Besitzerin</th><th class="num">Börse</th><th class="num">Club</th></tr></thead>
   <tbody>
     {% for i in items %}
       <tr>
         <td>{% if i.article %}<a href="{% url 'article_edit' i.article.pk %}">{{ i.article.label }}</a>{% endif %}</td>
-        <td>{{ i.description }}{% if i.owner %}<br><small>{{ i.owner.name }}{% if i.payout %} · <a href="{% url 'payout_pdf' i.payout.pk %}">ausbezahlt {{ i.payout.date|date:"j.n.Y" }}</a>{% endif %}</small>{% endif %}</td>
+        <td>{% if sale.cancelled_at %}{{ i.description }}{% else %}<input class="desc-input" name="bezeichnung-{{ i.pk }}" value="{{ i.description }}" maxlength="300" aria-label="Bezeichnung auf der Quittung">{% endif %}{% if i.article.extra_info %}<br><small>{{ i.article.extra_info }}</small>{% endif %}{% if i.owner %}<br><small>{{ i.owner.name }}{% if i.payout %} · <a href="{% url 'payout_pdf' i.payout.pk %}">ausbezahlt {{ i.payout.date|date:"j.n.Y" }}</a>{% endif %}</small>{% endif %}</td>
         <td>{{ i.size }}</td>
         <td>{{ i.get_kind_display }}</td>
         <td class="num">{{ i.price|chf }}</td>
@@ -45,6 +47,14 @@
   </tbody>
   <tfoot><tr><th colspan="4">Total</th><th class="num">{{ sale.total|chf }}</th><th colspan="3"></th></tr></tfoot>
 </table>
+{% if not sale.cancelled_at %}
+  <div class="actions">
+    <button type="submit">Bezeichnungen speichern</button>
+    <button type="submit" name="pdf" value="1" class="primary">Speichern und Quittung als PDF</button>
+    <small>Die Bezeichnungen gelten nur für die Quittung; die Artikel im Inventar bleiben unverändert.</small>
+  </div>
+{% endif %}
+</form>
 
 {% if not sale.cancelled_at %}
   <form method="post" action="{% url 'sale_cancel' sale.pk %}" class="danger-zone" onsubmit="return confirm('Verkauf wirklich stornieren? Die Artikel kommen wieder an Lager.')">

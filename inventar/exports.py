@@ -42,14 +42,14 @@ def full_export() -> bytes:
     workbook.remove(workbook.active)
     articles = Article.objects.select_related("category", "owner", "buyer").order_by("number", "number_suffix")
     _sheet(workbook, "Inventar", [
-        "Nr.", "Kategorie", "Bezeichnung", "Grösse", "Besitzerin", "Preis", "Vermerk", "Anteil % (abweichend)",
+        "Nr.", "Kategorie", "Bezeichnung", "Zusatzinformation", "Grösse", "Besitzerin", "Preis", "Vermerk", "Anteil % (abweichend)",
         "Eingang", "Status", "Verkauft am", "Verkaufspreis", "Anteil Besitzerin", "Anteil Börse", "Käuferin",
     ], (
-        (a.label, str(a.category), a.description, a.size, a.owner.name, a.price, a.price_note, a.owner_share,
+        (a.label, str(a.category), a.description, a.extra_info, a.size, a.owner.name, a.price, a.price_note, a.owner_share,
          a.intake_date, a.get_status_display(), a.sold_date, a.sale_price, a.owner_amount, a.shop_amount,
          a.buyer.name if a.buyer else "")
         for a in articles
-    ), {6: CHF, 9: DATE, 11: DATE, 12: CHF, 13: CHF, 14: CHF})
+    ), {7: CHF, 10: DATE, 12: DATE, 13: CHF, 14: CHF, 15: CHF})
 
     positions = sorted(reports.positions(), key=lambda p: (p.date, p.sale_number or 0))
     _sheet(workbook, "Verkäufe", [

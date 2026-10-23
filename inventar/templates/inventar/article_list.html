@@ -30,7 +30,7 @@
     {% for a in articles %}
       <tr>
         <td><a href="{% url 'article_edit' a.pk %}">{{ a.label }}</a></td>
-        <td>{{ a.description }}{% if a.price_note %} <span class="muted">({{ a.price_note }})</span>{% endif %}{% if a.is_donated %} <span class="badge">gespendet</span>{% endif %}</td>
+        <td>{{ a.description }}{% if a.price_note %} <span class="muted">({{ a.price_note }})</span>{% endif %}{% if a.is_donated %} <span class="badge">gespendet</span>{% endif %}{% if a.extra_info %}<br><small>{{ a.extra_info }}</small>{% endif %}</td>
         <td>{{ a.size }}</td>
         <td><a href="{% url 'person_detail' a.owner_id %}">{{ a.owner.name }}</a></td>
         <td class="num">{{ a.price|chf }}</td>

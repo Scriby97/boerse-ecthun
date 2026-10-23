@@ -20,6 +20,7 @@ class ArticleForm(forms.ModelForm):
             "number_suffix",
             "owner",
             "description",
+            "extra_info",
             "size",
             "price",
             "price_note",
@@ -30,11 +31,12 @@ class ArticleForm(forms.ModelForm):
         widgets = {
             "intake_date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "notes": forms.Textarea(attrs={"rows": 2}),
+            "extra_info": forms.Textarea(attrs={"rows": 2}),
             "size": forms.TextInput(attrs={"list": "sizes", "autocomplete": "off"}),
             "description": forms.TextInput(attrs={"autofocus": True}),
         }
 
-    field_order = ["category", "number", "number_suffix", "owner", "new_owner", "description"]
+    field_order = ["category", "number", "number_suffix", "owner", "new_owner", "description", "extra_info"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

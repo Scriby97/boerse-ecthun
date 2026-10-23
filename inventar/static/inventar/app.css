@@ -73,7 +73,7 @@ main { flex: 1; padding: 1.75rem 2rem 3rem; max-width: 1200px; min-width: 0; }
 .form { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.25rem 1.5rem; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem 1.25rem; }
 .field { display: flex; flex-direction: column; gap: 0.3rem; }
-.field-description, .field-notes, .field-address { grid-column: 1 / -1; }
+.field-description, .field-extra_info, .field-notes, .field-address { grid-column: 1 / -1; }
 label { font-weight: 600; font-size: 0.95rem; }
 small { color: var(--muted); font-size: 0.85rem; }
 input, select, textarea, button, .button {
@@ -174,3 +174,4 @@ form.inline { display: inline; }
 button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 .backup-line { margin-top: 2rem; font-size: 0.9rem; }
 .sidebar .version { padding: 0.5rem 0.75rem 0; font-size: 0.8rem; color: #a0aec0; }
+.desc-input { width: 100%; min-width: 220px; }

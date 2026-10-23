@@ -100,3 +100,45 @@ class KasseViewTests(TestCase):
         self.client.post(reverse("payout_person", args=[self.anna.pk]), {"method": "bar"})
         self.assertEqual(Payout.objects.get().amount, Decimal("8.45"))
         self.assertContains(self.client.get(reverse("payout_list")), "Alles ausbezahlt")
+
+
+class ReceiptDescriptionTests(TestCase):
+    def setUp(self):
+        anna = Person.objects.create(name="Muster Anna")
+        cat = Category.objects.get(code=10)
+        self.article = Article.objects.create(number=10001, category=cat, description="Kürkleid blau",
+                                              extra_info="kleiner Fleck am Ärmel", owner=anna, price=Decimal("45"))
+
+    def test_zusatzinformation_nicht_auf_der_quittung_und_bezeichnung_anpassen(self):
+        self.client.post(reverse("kasse_add_number"), {"nummer": "10001"})
+        self.assertContains(self.client.get(reverse("kasse")), "kleiner Fleck am Ärmel")
+        self.client.post(reverse("kasse_checkout"), {"payment": "bar", "date": "2026-10-23"})
+        sale = Sale.objects.get()
+        item = sale.items.get()
+        detail = self.client.get(reverse("sale_detail", args=[sale.pk]))
+        self.assertContains(detail, 'value="Kürkleid blau"')
+
+        response = self.client.post(reverse("sale_descriptions", args=[sale.pk]),
+                                    {f"bezeichnung-{item.pk}": "Kürkleid hellblau mit Glitzer", "pdf": "1"})
+        self.assertRedirects(response, reverse("sale_receipt", args=[sale.pk]), fetch_redirect_response=False)
+        item.refresh_from_db()
+        self.article.refresh_from_db()
+        self.assertEqual(item.description, "Kürkleid hellblau mit Glitzer")
+        self.assertEqual(self.article.description, "Kürkleid blau", "Inventar bleibt unverändert")
+
+        from inventar.pdf import receipt_pdf
+        import zlib, re
+        pdf = receipt_pdf(sale)
+        text = b"".join(zlib.decompress(m) for m in re.findall(rb"stream\r?\n(.*?)\r?\nendstream", pdf, re.S)
+                        if m[:2] in (b"x\x9c", b"x\xda"))
+        self.assertIn(b"hellblau", text)
+        self.assertNotIn(b"Fleck", text)
+
+    def test_zusatzinformation_beim_erfassen(self):
+        response = self.client.post(reverse("article_create"), {
+            "category": Category.objects.get(code=10).pk, "number": 10002, "new_owner": "Neu Nina",
+            "description": "Röckli", "extra_info": "Marke Jiv, wie neu", "intake_date": "2026-10-23",
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Article.objects.get(number=10002).extra_info, "Marke Jiv, wie neu")
+        self.assertContains(self.client.get(reverse("article_list"), {"q": "Jiv"}), "Röckli")

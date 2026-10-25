@@ -8,8 +8,6 @@ import datetime as dt
 import tempfile
 from pathlib import Path
 
-from numbers_parser import Document
-
 from .models import Article, ClubItem, Person, SaleItem
 
 HEADER = [None, "Datum", "Kleidungsstück", "Grösse", "Besitzer", "Kontakt", "Verkaufspreis ", "Code",
@@ -99,6 +97,8 @@ def club_sales_rows() -> list[list]:
 
 
 def build() -> bytes:
+    from numbers_parser import Document
+
     doc = Document()
     first = doc.sheets[0]
     first.name = "Komplette Liste"

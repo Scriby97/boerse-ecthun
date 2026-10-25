@@ -1,3 +1,6 @@
 # Eigenes App-Fenster (pywebview); ohne öffnet app.py den Browser
 -r requirements.txt
 pywebview>=5.0
+# Ab Version 49 gibt es cryptography (für numbers-parser) nicht mehr fertig für Intel-Macs; selbst gebaut passt
+# es nicht zur mitgelieferten OpenSSL und die App startet nicht
+cryptography<49; sys_platform == "darwin" and platform_machine == "x86_64"

@@ -134,3 +134,16 @@ class DailyStatementTests(TestCase):
         # Am Nachmittag abgeschlossen, danach noch ein Verkauf am selben Tag → neue Tagesabrechnung
         self.sell(1004, day1)
         self.assertEqual([(g["day"], g["count"]) for g in sales.daily_groups()], [(day2, 1), (day1, 1)])
+
+
+class NavigationCountTests(TestCase):
+    def test_zahl_offener_abrechnungen_in_der_navigation(self):
+        from django.urls import reverse
+        anna = Person.objects.create(name="Muster Anna")
+        cat = Category.objects.get(code=1)
+        page = self.client.get(reverse("start"))
+        self.assertNotContains(page, 'class="nav-count"')
+        for n, day in [(1001, dt.date(2026, 10, 24)), (1002, dt.date(2026, 10, 25))]:
+            a = Article.objects.create(number=n, category=cat, description="x", owner=anna, price=Decimal("10"))
+            sales.create_sale([{"kind": "artikel", "article_id": a.pk, "description": "x", "price": "10.00"}], date=day)
+        self.assertContains(self.client.get(reverse("start")), 'aria-label="2 offene Abrechnungen">2</span>')

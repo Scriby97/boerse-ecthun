@@ -15,7 +15,7 @@
     <a href="{% url 'kasse' %}" {% if 'kasse' in name or name == 'sale_detail' %}aria-current="page"{% endif %}>Kasse</a>
     <a href="{% url 'article_list' %}" {% if name == 'article_list' or name == 'article_edit' %}aria-current="page"{% endif %}>Inventar</a>
     <a href="{% url 'sale_list' %}" {% if name == 'sale_list' %}aria-current="page"{% endif %}>Verkauft</a>
-    <a href="{% url 'payout_list' %}" {% if 'payout' in name %}aria-current="page"{% endif %}>Abrechnen</a>
+    <a href="{% url 'payout_list' %}" {% if 'payout' in name %}aria-current="page"{% endif %}>Abrechnen{% if open_statements %} <span class="nav-count" aria-label="{{ open_statements }} offene Abrechnungen">{{ open_statements }}</span>{% endif %}</a>
     <a href="{% url 'person_list' %}" {% if 'person' in name %}aria-current="page"{% endif %}>Kunden</a>
     <a href="{% url 'club_items' %}" {% if 'club' in name %}aria-current="page"{% endif %}>Club EC Thun</a>
     <a class="secondary" href="{% url 'export' %}" {% if 'export' in name %}aria-current="page"{% endif %}>Export</a>

@@ -48,6 +48,9 @@ jobs:
           cat > "$RUNNER_TEMP/annotate.sh" <<'SH'
           echo "::error title=$1::$(tail -c 3500 "$2" | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
           SH
+      - name: Signatur nach PyInstaller (nur zur Info)
+        run: |
+          codesign --verify --deep --strict --verbose=4 "dist/Börse EC Thun.app" 2>&1 | grep -v -E '^--(prepared|validated)' || true
       # Zuerst testen: danach darf sich am App-Paket nichts mehr ändern, sonst stimmt die Signatur nicht
       - name: Selbsttest der fertigen App
         run: |
@@ -64,10 +67,11 @@ jobs:
           xattr -cr "$APP"
           # Python.framework kommt mit einer Signatur, die Dateien verlangt, die PyInstaller nicht mitkopiert
           codesign --force --sign - "$APP/Contents/Frameworks/Python.framework" > sign.log 2>&1 || true
-          if ! { codesign --force --sign - "$APP" && codesign --verify --deep --strict --verbose=2 "$APP"; } >> sign.log 2>&1; then
-            cat sign.log; sh "$RUNNER_TEMP/annotate.sh" Versiegeln sign.log; exit 1
+          if ! { codesign --force --sign - "$APP" && codesign --verify --deep --strict --verbose=4 "$APP"; } >> sign.log 2>&1; then
+            grep -v -E '^--(prepared|validated)' sign.log > sign.err || true
+            cat sign.err; sh "$RUNNER_TEMP/annotate.sh" Versiegeln sign.err; exit 1
           fi
-          cat sign.log
+          grep -v -E '^--(prepared|validated)' sign.log || true
       # ZIP für den Update-Knopf in der App, DMG (Fenster zum Rüberziehen) für die erste Installation
       - name: ZIP und DMG erstellen
         run: |

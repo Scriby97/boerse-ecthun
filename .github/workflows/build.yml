@@ -71,6 +71,12 @@ jobs:
           codesign --force --sign - "$APP/Contents/Frameworks/Python.framework" > sign.log 2>&1 || true
           if ! { codesign --force --sign - "$APP" && codesign --verify --deep --strict --verbose=4 "$APP"; } >> sign.log 2>&1; then
             grep -v -E '^--(prepared|validated)' sign.log > sign.err || true
+            {
+              echo "== ohne --deep"; codesign --verify --strict -vvvv "$APP" 2>&1 | tail -15
+              echo "== Framework"; codesign --verify --strict -vvvv "$APP/Contents/Frameworks/Python.framework" 2>&1 | tail -8
+              echo "== Aufbau"; ls -la "$APP/Contents/Frameworks/Python.framework" "$APP/Contents/Frameworks/Python.framework/Versions" "$APP/Contents/Frameworks/Python.framework/Versions/Current/" 2>&1
+              echo "== Symlinks nach aussen"; find "$APP" -type l -exec sh -c 'case "$(readlink "$1")" in /*) echo "$1 -> $(readlink "$1")";; esac' _ {} \; | head -10
+            } >> sign.err 2>&1
             cat sign.err; sh "$RUNNER_TEMP/annotate.sh" Versiegeln sign.err; exit 1
           fi
           grep -v -E '^--(prepared|validated)' sign.log || true

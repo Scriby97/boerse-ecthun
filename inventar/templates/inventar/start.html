@@ -3,7 +3,15 @@
 {% block content %}
 <h1>Guten Tag, Stephanie</h1>
 {% if update %}
-  <p class="notice">Es gibt eine neue Version der App ({{ update.version }}). <a href="{{ update.url }}" target="_blank" rel="noopener">Herunterladen</a></p>
+  {% if can_install %}
+    <form method="post" action="{% url 'update' %}" class="notice">
+      {% csrf_token %}
+      Es gibt eine neue Version der App ({{ update.version }}).
+      <button type="submit" class="primary">Jetzt aktualisieren</button>
+    </form>
+  {% else %}
+    <p class="notice">Es gibt eine neue Version der App ({{ update.version }}). <a href="{{ update.url }}" target="_blank" rel="noopener">Herunterladen</a></p>
+  {% endif %}
 {% endif %}
 {% if backup_stale %}
   <p class="notice">Die letzte Sicherung ist älter als 3 Tage{% if last_backup %} ({{ last_backup|date:"j.n.Y" }}){% endif %}. <a href="{% url 'settings' %}">Jetzt sichern</a></p>

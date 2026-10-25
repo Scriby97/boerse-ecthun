@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
-from . import backup, club_import, exports, numbers_export, sales
+from . import backup, club_import, exports, numbers_export, sales, updates
 from .delivery import NUMBERS, PDF, XLSX, deliver
 from .forms import ClubBackfillForm, ClubItemForm, SettingsForm
 from .models import AppSettings, ClubItem, ClubStatement, Payout, Person, SaleItem
@@ -174,6 +174,19 @@ def guide(request):
 def guide_pdf_view(request):
     content = guide_pdf(render_to_string("inventar/_guide_content.html"))
     return deliver(request, content, "Anleitung-Boerse-EC-Thun.pdf", PDF)
+
+
+# --- Aktualisieren --------------------------------------------------------------------------------
+
+
+@require_http_methods(["GET", "POST"])
+def update(request):
+    if request.method == "POST":
+        if not updates.start_install() and updates.state["status"] not in ("laden", "neustart"):
+            messages.error(request, "Die neue Version lässt sich hier nicht automatisch installieren.")
+            return redirect("start")
+        return redirect("update")
+    return render(request, "inventar/update.html", {"update": updates.available(), "state": updates.state})
 
 
 # --- Einstellungen und Sicherungen ----------------------------------------------------------------

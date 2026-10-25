@@ -83,6 +83,15 @@ def selftest() -> int:
     ok = response.status_code == 302 and saved.exists() and saved.read_bytes().startswith(b"%PDF")
     failed += not ok
     print(f"  {'ok ' if ok else 'FEHLER'} Datei speichern statt Download ({response.status_code})")
+    # Zertifikate für den Update-Knopf (Verbindung zu GitHub) müssen mitverpackt sein
+    try:
+        import certifi
+
+        ok = Path(certifi.where()).is_file()
+    except ImportError:
+        ok = False
+    failed += not ok
+    print(f"  {'ok ' if ok else 'FEHLER'} Zertifikate für Updates")
     print("Alles in Ordnung." if not failed else f"{failed} Prüfung(en) fehlgeschlagen.")
     return 1 if failed else 0
 
@@ -126,7 +135,9 @@ def main() -> None:
     for key, value in {"ALLOW_DOWNLOADS": True, "OPEN_EXTERNAL_LINKS_IN_BROWSER": True}.items():
         if key in getattr(webview, "settings", {}):
             webview.settings[key] = value
-    webview.create_window("Börse EC Thun", url, width=1320, height=880, min_size=(1000, 680))
+    window = webview.create_window("Börse EC Thun", url, width=1320, height=880, min_size=(1000, 680))
+    # Nach dem Laden einer neuen Version schliesst die App sich selbst; das Ersetzen läuft danach
+    updates.quit_app = window.destroy
     webview.start()
     # Fenster geschlossen: Stand sichern (lokal und in iCloud)
     backup_database("beim-schliessen")

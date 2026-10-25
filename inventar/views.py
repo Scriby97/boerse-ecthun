@@ -44,6 +44,7 @@ def start(request):
             "last_backup": last_backup_time(),
             "backup_stale": backup_is_stale(),
             "update": updates.available(),
+            "can_install": updates.can_install(),
         },
     )
 

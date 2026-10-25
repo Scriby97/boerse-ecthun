@@ -1,0 +1,20 @@
+{% extends "inventar/base.html" %}
+{% block title %}Aktualisieren – Börse EC Thun{% endblock %}
+{% block extra_head %}{% if state.status == "laden" or state.status == "neustart" %}<meta http-equiv="refresh" content="2">{% endif %}{% endblock %}
+{% block content %}
+<h1>Aktualisieren{% if update %} auf Version {{ update.version }}{% endif %}</h1>
+{% if state.status == "laden" %}
+  <p>Die neue Version wird geladen … {{ state.percent }} %</p>
+  <progress max="100" value="{{ state.percent }}"></progress>
+  <p class="muted">Bitte die App offen lassen. Deine Daten bleiben, wie sie sind.</p>
+{% elif state.status == "neustart" %}
+  <p>Fertig geladen. Die App schliesst sich jetzt und startet in ein paar Sekunden mit der neuen Version.</p>
+{% elif state.status == "fehler" %}
+  <p class="notice">Das Aktualisieren hat nicht geklappt: {{ state.message }}</p>
+  <p>Die bisherige Version läuft weiter. Später nochmals versuchen
+    {% if update %}oder die neue Version <a href="{{ update.url }}" target="_blank" rel="noopener">herunterladen</a>{% endif %}.</p>
+  <form method="post">{% csrf_token %}<button type="submit" class="primary">Nochmals versuchen</button></form>
+{% else %}
+  <p><a href="{% url 'start' %}">Zur Startseite</a></p>
+{% endif %}
+{% endblock %}

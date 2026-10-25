@@ -66,4 +66,27 @@
 {% endif %}
 
 
+<details class="extra">
+  <summary>Doppelt erfasst? Mit einer anderen Person zusammenführen</summary>
+  <p class="muted">Alle Artikel, Käufe und Auszahlungen von «{{ person.name }}» gehen auf die gewählte Person über. Leere Angaben (Telefon, E-Mail, Adresse, IBAN) werden ergänzt, Notizen angehängt. Danach wird «{{ person.name }}» gelöscht.</p>
+  <form method="post" action="{% url 'person_merge' person.pk %}" class="inline-form" onsubmit="return confirm('«{{ person.name }}» wirklich mit der gewählten Person zusammenführen? Das lässt sich nicht rückgängig machen.')">
+    {% csrf_token %}
+    <select name="target" aria-label="Richtige Person" required>
+      <option value="">– richtige Person wählen –</option>
+      {% for p in others %}<option value="{{ p.pk }}">{{ p.name }}{% if p.phone %} · {{ p.phone }}{% endif %}</option>{% endfor %}
+    </select>
+    <button type="submit">Zusammenführen</button>
+  </form>
+</details>
+
+<details class="extra">
+  <summary>Person löschen</summary>
+  {% if linked %}
+    <p class="muted">«{{ person.name }}» hat Artikel, Käufe oder Auszahlungen und kann deshalb nicht gelöscht werden. Ist die Person doppelt erfasst, oben zusammenführen.</p>
+  {% else %}
+    <form method="post" action="{% url 'person_delete' person.pk %}" onsubmit="return confirm('«{{ person.name }}» wirklich löschen?')">
+      {% csrf_token %}<button type="submit" class="danger">«{{ person.name }}» löschen</button>
+    </form>
+  {% endif %}
+</details>
 {% endblock %}

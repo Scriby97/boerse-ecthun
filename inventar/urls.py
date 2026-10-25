@@ -11,6 +11,8 @@ urlpatterns = [
     path("kunden/neu/", views.person_edit, name="person_create"),
     path("kunden/<int:pk>/", views.person_detail, name="person_detail"),
     path("kunden/<int:pk>/bearbeiten/", views.person_edit, name="person_edit"),
+    path("kunden/<int:pk>/loeschen/", views.person_delete, name="person_delete"),
+    path("kunden/<int:pk>/zusammenfuehren/", views.person_merge, name="person_merge"),
     path("import/", views.import_upload, name="import_upload"),
     path("import/<str:token>/", views.import_preview, name="import_preview"),
     # Kasse

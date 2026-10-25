@@ -1,13 +1,14 @@
-"""Kundendatei: Sortierung und Übersicht pro Person."""
+"""Kundendatei: zusammenführen, löschen, sortieren, Übersicht pro Person."""
 
 import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
 
+from django.db import transaction
 from django.db.models import Count, Q
 
-from .models import Article, Person, SaleItem
+from .models import Article, Payout, Person, Sale, SaleItem
 
 ZERO = Decimal("0")
 SORTS = {
@@ -16,6 +17,10 @@ SORTS = {
     "bestand": "Meiste Artikel in der Börse",
     "gekauft": "Meiste gekaufte Artikel",
 }
+
+
+class PersonError(Exception):
+    pass
 
 
 def sort_key(name: str) -> str:
@@ -110,3 +115,41 @@ def overview(person: Person) -> dict:
         "sold_paid": sold_paid, "sold_paid_total": total(sold_paid), "sold_paid_share": total(sold_paid, "share"),
         "bought": bought, "bought_total": total(bought),
     }
+
+
+def is_linked(person: Person) -> bool:
+    return (person.articles.exists() or person.purchases.exists() or person.sale_items.exists()
+            or person.payouts.exists() or person.sales.exists())
+
+
+@transaction.atomic
+def delete(person: Person) -> None:
+    if is_linked(person):
+        raise PersonError(
+            f"{person.name} hat noch Artikel, Käufe oder Auszahlungen. Bitte zuerst mit der richtigen Person zusammenführen."
+        )
+    person.delete()
+
+
+@transaction.atomic
+def merge(source: Person, target: Person) -> Person:
+    """Führt eine doppelt erfasste Person in die richtige über und löscht die doppelte."""
+    if source.pk == target.pk:
+        raise PersonError("Eine Person kann nicht mit sich selbst zusammengeführt werden.")
+    Article.objects.filter(owner=source).update(owner=target)
+    Article.objects.filter(buyer=source).update(buyer=target)
+    Sale.objects.filter(buyer=source).update(buyer=target)
+    SaleItem.objects.filter(owner=source).update(owner=target)
+    Payout.objects.filter(person=source).update(person=target)
+    # Leere Angaben der richtigen Person mit denen der doppelten ergänzen
+    for field in ("phone", "email", "address", "iban"):
+        if not getattr(target, field) and getattr(source, field):
+            setattr(target, field, getattr(source, field))
+    target.twint = target.twint or source.twint
+    if target.owner_share is None and source.owner_share is not None:
+        target.owner_share = source.owner_share
+    if source.notes.strip():
+        target.notes = "\n".join(filter(None, [target.notes.strip(), f"Von «{source.name}»: {source.notes.strip()}"]))
+    target.save()
+    source.delete()
+    return target

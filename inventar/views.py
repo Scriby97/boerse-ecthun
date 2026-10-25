@@ -10,7 +10,7 @@ from django.db.models import Count, Q, Sum
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 
 from . import club_import, importer, sales, updates
 from . import persons as persons_module
@@ -184,8 +184,36 @@ def person_detail(request, pk):
                or Decimal("0")),
             "payouts": person.payouts.all(),
             "methods": Payout.Method.choices,
+            "others": sorted(Person.objects.exclude(pk=person.pk), key=lambda p: persons_module.sort_key(p.name)),
+            "linked": persons_module.is_linked(person),
         },
     )
+
+
+@require_POST
+def person_delete(request, pk):
+    person = get_object_or_404(Person, pk=pk)
+    try:
+        persons_module.delete(person)
+    except persons_module.PersonError as error:
+        messages.error(request, str(error))
+        return redirect("person_detail", pk=pk)
+    messages.success(request, f"{person.name} gelöscht.")
+    return redirect("person_list")
+
+
+@require_POST
+def person_merge(request, pk):
+    """Doppelt erfasste Person (pk) in die gewählte richtige Person überführen."""
+    source = get_object_or_404(Person, pk=pk)
+    target = get_object_or_404(Person, pk=request.POST.get("target") or 0)
+    try:
+        persons_module.merge(source, target)
+    except persons_module.PersonError as error:
+        messages.error(request, str(error))
+        return redirect("person_detail", pk=pk)
+    messages.success(request, f"«{source.name}» mit «{target.name}» zusammengeführt.")
+    return redirect("person_detail", pk=target.pk)
 
 
 @require_http_methods(["GET", "POST"])

@@ -39,6 +39,8 @@ class PageTests(TestCase):
     def test_erfassen_schlaegt_naechste_nummer_vor(self):
         response = self.client.get(reverse("article_create") + "?kategorie=10")
         self.assertContains(response, 'value="10006"')
+        self.assertContains(response, "Umrechnung Kindergrössen")
+        self.assertContains(response, "134–140")
 
     def test_serienerfassung_mit_neuer_besitzerin(self):
         response = self.client.post(

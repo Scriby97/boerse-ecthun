@@ -175,3 +175,7 @@ button.danger { background: var(--danger); border-color: var(--danger); color: #
 .backup-line { margin-top: 2rem; font-size: 0.9rem; }
 .sidebar .version { padding: 0.5rem 0.75rem 0; font-size: 0.8rem; color: #a0aec0; }
 .desc-input { width: 100%; min-width: 220px; }
+.size-table summary { cursor: pointer; color: var(--accent); font-size: 0.9rem; }
+.size-table table { border-collapse: collapse; margin-top: 0.4rem; font-size: 0.88rem; }
+.size-table th, .size-table td { padding: 0.2rem 0.6rem 0.2rem 0; text-align: left; border-bottom: 1px solid var(--line); }
+.size-table th { color: var(--muted); font-weight: 600; }

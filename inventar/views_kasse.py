@@ -13,6 +13,7 @@ from .forms import CheckoutForm, ClubItemForm, ClubSaleForm, OtherItemForm, Payo
 from .models import AppSettings, Article, ClubItem, Payout, Person, Sale, SaleItem
 from .delivery import PDF, deliver
 from .pdf import receipt_pdf
+from .persons import sort_key
 
 CART = "kasse"
 CENT = Decimal("0.01")
@@ -205,11 +206,27 @@ def sale_detail(request, pk):
             entry = to_pay.setdefault(item.owner_id, {"person": item.owner, "amount": Decimal("0")})
             entry["amount"] += item.owner_amount
     return render(request, "inventar/sale_detail.html", {
+        "people": sorted(Person.objects.all(), key=lambda p: sort_key(p.name)),
         "sale": sale,
         "items": items,
         "to_pay": list(to_pay.values()),
         "methods": Payout.Method.choices,
     })
+
+
+@require_POST
+def sale_buyer(request, pk):
+    """Käuferin nachträglich erfassen oder ändern (auch bei den Artikeln des Verkaufs)."""
+    sale = get_object_or_404(Sale, pk=pk)
+    buyer = Person.objects.filter(pk=request.POST.get("buyer") or 0).first()
+    new_name = " ".join(request.POST.get("new_buyer", "").split())
+    if not buyer and new_name:
+        buyer = Person.objects.filter(name__iexact=new_name).first() or Person.objects.create(name=new_name)
+    sale.buyer = buyer
+    sale.save(update_fields=["buyer"])
+    Article.objects.filter(sale_items__sale=sale).update(buyer=buyer)
+    messages.success(request, f"Käuferin: {buyer.name}." if buyer else "Käuferin entfernt.")
+    return redirect("sale_detail", pk=sale.pk)
 
 
 @require_POST

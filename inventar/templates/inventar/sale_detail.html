@@ -11,6 +11,18 @@
   {{ sale.date|date:"j.n.Y" }} · bezahlt mit {{ sale.get_payment_display }}
   {% if sale.buyer %} · Käuferin <a href="{% url 'person_detail' sale.buyer.pk %}">{{ sale.buyer.name }}</a>{% endif %}
 </p>
+{% if not sale.cancelled_at %}
+<form method="post" action="{% url 'sale_buyer' sale.pk %}" class="inline-form buyer-form">
+  {% csrf_token %}
+  <label for="buyer">Käuferin</label>
+  <select id="buyer" name="buyer">
+    <option value="">– ohne –</option>
+    {% for p in people %}<option value="{{ p.pk }}" {% if p.pk == sale.buyer_id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+  </select>
+  <input name="new_buyer" placeholder="oder neue Käuferin: Nachname Vorname" aria-label="Neue Käuferin">
+  <button type="submit">Käuferin speichern</button>
+</form>
+{% endif %}
 
 {% if to_pay %}
   <section class="card payout-now">

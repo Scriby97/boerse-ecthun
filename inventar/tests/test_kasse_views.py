@@ -142,3 +142,23 @@ class ReceiptDescriptionTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Article.objects.get(number=10002).extra_info, "Marke Jiv, wie neu")
         self.assertContains(self.client.get(reverse("article_list"), {"q": "Jiv"}), "Röckli")
+
+
+class SaleBuyerTests(TestCase):
+    def test_kaeuferin_nachtraeglich(self):
+        anna = Person.objects.create(name="Muster Anna")
+        cat = Category.objects.get(code=1)
+        article = Article.objects.create(number=1001, category=cat, description="Leggins", owner=anna,
+                                         price=Decimal("5"))
+        from inventar import sales
+        sale = sales.create_sale([{"kind": "artikel", "article_id": article.pk, "description": "Leggins",
+                                   "price": "5.00"}])
+        self.assertContains(self.client.get(reverse("sale_detail", args=[sale.pk])), "Käuferin speichern")
+        self.client.post(reverse("sale_buyer", args=[sale.pk]), {"new_buyer": "Neu  Nina"})
+        sale.refresh_from_db()
+        article.refresh_from_db()
+        self.assertEqual((sale.buyer.name, article.buyer.name), ("Neu Nina", "Neu Nina"))
+        self.client.post(reverse("sale_buyer", args=[sale.pk]), {"buyer": anna.pk})
+        sale.refresh_from_db()
+        self.assertEqual(sale.buyer, anna)
+        self.assertEqual(Person.objects.filter(name="Neu Nina").count(), 1)

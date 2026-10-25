@@ -38,12 +38,20 @@ das PDF mit `python manage.py anleitung_pdf` neu schreiben.
 ## Mac-App bauen und ausliefern
 
 GitHub Actions (`.github/workflows/build.yml`) testet bei jedem Push und baut die Mac-App für Apple-Chip und Intel
-(PyInstaller, Rezept `boerse.spec`), inklusive Selbsttest der fertigen App. Die ZIPs liegen beim Lauf unter «Artifacts».
+(PyInstaller, Rezept `boerse.spec`), inklusive Selbsttest der fertigen App, versiegelt sie (Ad-hoc-Signatur, ohne
+Apple-Entwicklerkonto) und prüft die Signatur. Pro Chip entstehen ein DMG (Installation: App auf «Programme» ziehen)
+und ein ZIP (für den Update-Knopf); beim Lauf unter «Artifacts».
 
 Neue Version ausliefern:
 1. `__version__` in `boerse/__init__.py` erhöhen, committen
 2. `git tag v1.0.1 && git push origin master v1.0.1`
-3. GitHub legt ein Release mit beiden ZIPs an; die App zeigt beim nächsten Start (mit Internet) den Hinweis an.
+3. GitHub legt ein Release mit DMG und ZIP für beide Chips an. Die App zeigt beim nächsten Start (mit Internet)
+   «Jetzt aktualisieren»: sie lädt das ZIP selbst (ohne Quarantäne, also ohne Meldung von macOS), schliesst sich,
+   ersetzt sich im Ordner Programme und startet neu (`inventar/updates.py`).
+
+Erste Installation aus dem Internet: macOS meldet «nicht überprüft», Freigabe einmalig unter Systemeinstellungen >
+Datenschutz & Sicherheit > «Dennoch öffnen» (steht in der Anleitung). Erscheint stattdessen «beschädigt», ist die
+Signatur ungültig – der Bau prüft das und bricht dann ab.
 
 Lokal (Windows) lässt sich das Verpacken mit `pyinstaller --noconfirm boerse.spec` testen,
 dann `dist/Börse EC Thun/Börse EC Thun.exe --selftest`.

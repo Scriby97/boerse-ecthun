@@ -48,8 +48,14 @@ jobs:
         run: |
           codesign --force --sign - "dist/Börse EC Thun.app"
           codesign --verify --strict --verbose=2 "dist/Börse EC Thun.app"
+      # Bei einem Fehler kommt das Ende der Ausgabe als Annotation in die Übersicht (ohne Anmelden lesbar)
       - name: Selbsttest der fertigen App
-        run: '"dist/Börse EC Thun.app/Contents/MacOS/Börse EC Thun" --selftest'
+        run: |
+          set -o pipefail
+          if ! "dist/Börse EC Thun.app/Contents/MacOS/Börse EC Thun" --selftest 2>&1 | tee selftest.log; then
+            echo "::error title=Selbsttest::$(tail -c 3500 selftest.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit 1
+          fi
       - name: ZIP erstellen
         run: |
           cd dist

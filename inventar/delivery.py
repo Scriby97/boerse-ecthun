@@ -19,6 +19,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 
 PDF = "application/pdf"
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+NUMBERS = "application/vnd.apple.numbers"
 
 
 def deliver(request, content: bytes, filename: str, content_type: str) -> HttpResponse:

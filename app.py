@@ -56,6 +56,7 @@ def selftest() -> int:
         ("Quittung", f"/verkauf/{sale.pk}/quittung.pdf", b"%PDF"),
         ("Etiketten", "/etiketten.pdf?status=", b"%PDF"),
         ("Export", "/export/boerse.xlsx", b"PK"),
+        ("Numbers-Export", "/export/boerse.numbers", b"PK"),
     ]
     failed = 0
     print(f"Börse EC Thun {__version__} – Selbsttest")

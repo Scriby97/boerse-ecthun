@@ -8,6 +8,12 @@
   <a class="button primary" href="{% url 'export_xlsx' %}">Excel herunterladen</a>
 </section>
 <section class="card">
+  <h2 class="card-title">Als Numbers-Liste wie früher</h2>
+  <p>Die Inventarliste im Aufbau der ursprünglichen Numbers-Datei («Komplette Liste»), dazu die Blätter «Ohne Nummer»,
+    «Clubbestand» und «Clubverkäufe». Die Datei lässt sich in der App auch wieder importieren.</p>
+  <a class="button primary" href="{% url 'export_numbers' %}">Numbers-Datei herunterladen</a>
+</section>
+<section class="card">
   <h2 class="card-title">Weitere Dokumente</h2>
   <ul>
     <li>Etiketten: im <a href="{% url 'article_list' %}">Inventar</a> filtern, dann «Etiketten drucken».</li>

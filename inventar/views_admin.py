@@ -7,8 +7,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
-from . import backup, club_import, exports, sales
-from .delivery import PDF, XLSX, deliver
+from . import backup, club_import, exports, numbers_export, sales
+from .delivery import NUMBERS, PDF, XLSX, deliver
 from .forms import ClubBackfillForm, ClubItemForm, SettingsForm
 from .models import AppSettings, ClubItem, ClubStatement, Payout, Person, SaleItem
 from .pdf import club_receipt_pdf, club_statement_pdf, labels_pdf, payout_pdf
@@ -157,6 +157,10 @@ def export_page(request):
 
 def export_xlsx(request):
     return deliver(request, exports.full_export(), f"Boerse-EC-Thun-{timezone.localdate():%Y-%m-%d}.xlsx", XLSX)
+
+
+def export_numbers(request):
+    return deliver(request, numbers_export.build(), f"Boerse-EC-Thun-{timezone.localdate():%Y-%m-%d}.numbers", NUMBERS)
 
 
 # --- Einstellungen und Sicherungen ----------------------------------------------------------------

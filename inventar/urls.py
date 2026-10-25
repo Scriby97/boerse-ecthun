@@ -47,6 +47,7 @@ urlpatterns = [
     path("etiketten.<str:fmt>", views_admin.labels, name="labels"),
     path("export/", views_admin.export_page, name="export"),
     path("export/boerse.xlsx", views_admin.export_xlsx, name="export_xlsx"),
+    path("export/boerse.numbers", views_admin.export_numbers, name="export_numbers"),
     path("einstellungen/", views_admin.settings_page, name="settings"),
     path("einstellungen/sichern/", views_admin.backup_now, name="backup_now"),
     path("einstellungen/wiederherstellen/", views_admin.backup_restore, name="backup_restore"),

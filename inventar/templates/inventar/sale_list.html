@@ -37,7 +37,13 @@
 </table>
 
 {% if selected %}
-  <h2>{{ selected.title }}: {{ selected.count }} Posten</h2>
+  <div class="title-row">
+    <h2>{{ selected.title }}: {{ selected.count }} Posten</h2>
+    <nav class="tabs" aria-label="Reihenfolge">
+      <a href="?periode={{ period }}&zeitraum={{ selected.key }}&reihenfolge=neu" {% if order == "neu" %}aria-current="page"{% endif %}>Verkaufsdatum ↓ neuste zuerst</a>
+      <a href="?periode={{ period }}&zeitraum={{ selected.key }}&reihenfolge=alt" {% if order == "alt" %}aria-current="page"{% endif %}>↑ älteste zuerst</a>
+    </nav>
+  </div>
   <table class="table">
     <thead><tr><th>Datum</th><th>Quittung</th><th>Nr.</th><th>Artikel</th><th>Besitzerin</th><th class="num">CHF</th><th class="num">Besitzerin</th><th class="num">Börse</th></tr></thead>
     <tbody>

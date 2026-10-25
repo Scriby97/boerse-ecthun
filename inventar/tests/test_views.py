@@ -103,3 +103,21 @@ class ImportPageTests(TestCase):
     def test_falscher_dateityp(self):
         response = self.client.post(reverse("import_upload"), {"file": SimpleUploadedFile("liste.pdf", b"x")})
         self.assertContains(response, "Numbers-, Excel- oder CSV-Datei")
+
+
+class SortingTests(TestCase):
+    def test_inventar_nach_verkaufsdatum_sortieren(self):
+        import datetime as dt
+        anna = Person.objects.create(name="Muster Anna")
+        cat = Category.objects.get(code=1)
+        for n, sold in [(1001, dt.date(2026, 3, 1)), (1002, dt.date(2026, 9, 1)), (1003, None), (1004, dt.date(2026, 6, 1))]:
+            Article.objects.create(number=n, category=cat, description=f"A{n}", owner=anna, price=Decimal(n - 1000),
+                                   sold_date=sold, status="verkauft" if sold else "lager")
+        from inventar.views import filter_articles
+        newest = [a.number for a in filter_articles({"status": "", "sortierung": "-verkauft"})[0]]
+        self.assertEqual(newest, [1002, 1004, 1001, 1003])
+        oldest = [a.number for a in filter_articles({"status": "", "sortierung": "verkauft"})[0]]
+        self.assertEqual(oldest, [1001, 1004, 1002, 1003])
+        page = self.client.get(reverse("article_list"), {"status": "", "sortierung": "-preis"})
+        self.assertContains(page, 'value="-preis" selected')
+        self.assertEqual(self.client.get(reverse("sale_list"), {"reihenfolge": "alt"}).status_code, 200)

@@ -13,6 +13,9 @@
     <option value="">Alle Status</option>
     {% for value, label in statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
   </select>
+  <select name="sortierung" aria-label="Sortierung">
+    {% for value, label in sorts.items %}<option value="{{ value }}" {% if value == sort %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
   <button type="submit">Filtern</button>
 </form>
 <div class="list-actions">
@@ -24,7 +27,7 @@
 </div>
 <table class="table">
   <thead>
-    <tr><th>Nr.</th><th>Bezeichnung</th><th>Grösse</th><th>Besitzerin</th><th class="num">CHF</th><th>Eingang</th><th>Status</th></tr>
+    <tr><th>Nr.</th><th>Bezeichnung</th><th>Grösse</th><th>Besitzerin</th><th class="num">CHF</th><th>Eingang</th><th>Verkauft</th><th>Status</th></tr>
   </thead>
   <tbody>
     {% for a in articles %}
@@ -35,10 +38,11 @@
         <td><a href="{% url 'person_detail' a.owner_id %}">{{ a.owner.name }}</a></td>
         <td class="num">{{ a.price|chf }}</td>
         <td>{{ a.intake_date|date:"j.n.Y" }}</td>
+        <td>{{ a.sold_date|date:"j.n.Y" }}</td>
         <td><span class="status status-{{ a.status }}">{{ a.get_status_display }}</span></td>
       </tr>
     {% empty %}
-      <tr><td colspan="7" class="muted">Keine Artikel gefunden.</td></tr>
+      <tr><td colspan="8" class="muted">Keine Artikel gefunden.</td></tr>
     {% endfor %}
   </tbody>
 </table>

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.contrib import messages
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, F, Q, Sum
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -100,6 +100,18 @@ def article_edit(request, pk):
     )
 
 
+ARTICLE_SORTS = {
+    "nummer": ("Nummer", ["number", "number_suffix"]),
+    "-verkauft": ("Verkaufsdatum, neuste zuerst", [F("sold_date").desc(nulls_last=True), "number"]),
+    "verkauft": ("Verkaufsdatum, älteste zuerst", [F("sold_date").asc(nulls_last=True), "number"]),
+    "-eingang": ("Eingang, neuste zuerst", ["-intake_date", "number"]),
+    "eingang": ("Eingang, älteste zuerst", ["intake_date", "number"]),
+    "-preis": ("Preis, höchster zuerst", [F("price").desc(nulls_last=True), "number"]),
+    "preis": ("Preis, tiefster zuerst", [F("price").asc(nulls_last=True), "number"]),
+    "bezeichnung": ("Bezeichnung A–Z", ["description", "number"]),
+}
+
+
 def filter_articles(params) -> tuple:
     """Artikel nach Suche, Kategorie, Status und Erfassungsdatum (auch für die Etiketten)."""
     articles = Article.objects.select_related("category", "owner")
@@ -108,6 +120,7 @@ def filter_articles(params) -> tuple:
         "category": params.get("kategorie", ""),
         "status": params.get("status", Article.Status.STOCK),
         "created": params.get("erfasst", ""),
+        "sort": params.get("sortierung", "nummer") if params.get("sortierung") in ARTICLE_SORTS else "nummer",
     }
     q = filters["q"]
     if q:
@@ -124,7 +137,7 @@ def filter_articles(params) -> tuple:
         articles = articles.filter(created_at__date=filters["created"])
     if params.get("id"):
         articles = articles.filter(pk=params.get("id"))
-    return articles, filters
+    return articles.order_by(*ARTICLE_SORTS[filters["sort"]][1]), filters
 
 
 def article_list(request):
@@ -142,6 +155,8 @@ def article_list(request):
             "category": filters["category"],
             "status": filters["status"],
             "created": filters["created"],
+            "sort": filters["sort"],
+            "sorts": {key: label for key, (label, _) in ARTICLE_SORTS.items()},
             "query": request.GET.urlencode(),
         },
     )

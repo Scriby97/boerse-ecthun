@@ -265,12 +265,16 @@ def sale_list(request):
     groups = reports.summarize(period)
     selected_key = request.GET.get("zeitraum") or (groups[0].key if groups else None)
     selected = next((g for g in groups if g.key == selected_key), None)
+    order = "alt" if request.GET.get("reihenfolge") == "alt" else "neu"
+    if selected and order == "alt":
+        selected.positions = list(reversed(selected.positions))
     return render(request, "inventar/sale_list.html", {
         "period": period,
         "periods": reports.PERIODS,
         "groups": groups,
         "total": reports.totals(groups),
         "selected": selected,
+        "order": order,
         "recent_sales": Sale.objects.select_related("buyer").prefetch_related("items")[:15],
     })
 

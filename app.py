@@ -6,6 +6,9 @@ Das ist der Einstieg der fertigen Mac-App. Ohne pywebview öffnet sich stattdess
 
 import os
 import sys
+
+# Keine .pyc-Dateien ins App-Paket schreiben: das würde die Signatur verletzen («beschädigt»)
+sys.dont_write_bytecode = True
 import tempfile
 import threading
 import webbrowser

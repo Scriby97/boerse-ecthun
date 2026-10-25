@@ -78,3 +78,33 @@ class UpdateTests(TestCase):
             updates._install()
         self.assertEqual(updates.state["status"], "fehler")
         self.assertContains(self.client.get(reverse("update")), "kein Internet")
+
+
+class UpdateCheckTests(TestCase):
+    def setUp(self):
+        updates._available = None
+        self.addCleanup(setattr, updates, "_available", None)
+
+    def search(self, side_effect=None, release=RELEASE):
+        response = io.BytesIO(json.dumps(release).encode())
+        with mock.patch.object(updates, "_open", return_value=response, side_effect=side_effect):
+            return self.client.post(reverse("update_check"), follow=True)
+
+    def test_version_und_knopf_in_den_einstellungen(self):
+        response = self.client.get(reverse("settings"))
+        self.assertContains(response, "Nach Updates suchen")
+        self.assertContains(response, f"Version {updates.__version__}")
+
+    def test_neue_version_gefunden(self):
+        response = self.search()
+        self.assertContains(response, "Es gibt eine neue Version: 9.0.0")
+        self.assertNotContains(response, "Nach Updates suchen")
+        self.assertContains(response, "Herunterladen")
+
+    def test_aktuell(self):
+        response = self.search(release=dict(RELEASE, tag_name="v0.9.0"))
+        self.assertContains(response, "auf dem neusten Stand")
+
+    def test_ohne_internet(self):
+        response = self.search(side_effect=OSError("offline"))
+        self.assertContains(response, "Keine Verbindung zu GitHub")

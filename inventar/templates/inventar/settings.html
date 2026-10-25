@@ -29,6 +29,22 @@
   </form>
 </section>
 
+<h2 id="version">App-Version</h2>
+<section class="card">
+  <p>Installiert: <strong>Version {{ app_version }}</strong></p>
+  {% if update %}
+    <p class="notice">Es gibt eine neue Version: <strong>{{ update.version }}</strong>.</p>
+    {% if can_install %}
+      <form method="post" action="{% url 'update' %}">{% csrf_token %}<button type="submit" class="primary">Jetzt aktualisieren</button></form>
+    {% else %}
+      <p><a class="button primary" href="{{ update.url }}" target="_blank" rel="noopener">Herunterladen</a></p>
+    {% endif %}
+  {% else %}
+    <p>Die App schaut bei jedem Start nach einer neuen Version (mit Internet).</p>
+    <form method="post" action="{% url 'update_check' %}">{% csrf_token %}<button type="submit">Nach Updates suchen</button></form>
+  {% endif %}
+</section>
+
 {% if backups %}
 <details class="extra">
   <summary>Sicherung zurückholen</summary>

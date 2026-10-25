@@ -50,6 +50,7 @@ urlpatterns = [
     path("export/boerse.numbers", views_admin.export_numbers, name="export_numbers"),
     path("anleitung/", views_admin.guide, name="guide"),
     path("aktualisieren/", views_admin.update, name="update"),
+    path("aktualisieren/suchen/", views_admin.update_check, name="update_check"),
     path("anleitung.pdf", views_admin.guide_pdf_view, name="guide_pdf"),
     path("einstellungen/", views_admin.settings_page, name="settings"),
     path("einstellungen/sichern/", views_admin.backup_now, name="backup_now"),

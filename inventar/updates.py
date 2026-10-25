@@ -60,19 +60,24 @@ def asset_name(machine: str | None = None) -> str:
     return f"Boerse-EC-Thun-{ARCHITECTURES.get(machine or platform.machine(), 'apple-chip')}.zip"
 
 
-def check() -> None:
-    """Im Hintergrund beim Start aufgerufen; Fehler (kein Internet) werden ignoriert."""
+def check() -> bool | None:
+    """Fragt GitHub nach dem neusten Release: True = neuere Version da, False = aktuell, None = keine Verbindung.
+
+    Läuft beim Start im Hintergrund und auf Knopfdruck in den Einstellungen; Fehler (kein Internet) werden ignoriert.
+    """
     global _available
     try:
         with _open(RELEASES_URL) as response:
             data = json.load(response)
     except Exception:
-        return
+        return None
     tag = data.get("tag_name", "")
-    if version_tuple(tag) > version_tuple(__version__):
-        download = next((a.get("browser_download_url") for a in data.get("assets", []) if a.get("name") == asset_name()),
-                        None)
-        _available = {"version": tag.lstrip("v"), "url": data.get("html_url", ""), "download": download}
+    if version_tuple(tag) <= version_tuple(__version__):
+        return False
+    download = next((a.get("browser_download_url") for a in data.get("assets", []) if a.get("name") == asset_name()),
+                    None)
+    _available = {"version": tag.lstrip("v"), "url": data.get("html_url", ""), "download": download}
+    return True
 
 
 def available() -> dict | None:

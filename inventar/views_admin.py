@@ -5,8 +5,11 @@ from decimal import Decimal
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
+
+from boerse import __version__
 
 from . import backup, club_import, exports, numbers_export, sales, updates
 from .delivery import NUMBERS, PDF, XLSX, deliver
@@ -189,6 +192,18 @@ def update(request):
     return render(request, "inventar/update.html", {"update": updates.available(), "state": updates.state})
 
 
+@require_POST
+def update_check(request):
+    found = updates.check()
+    if found is None:
+        messages.error(request, "Keine Verbindung zu GitHub. Ist der Mac mit dem Internet verbunden?")
+    elif found:
+        messages.success(request, f"Es gibt eine neue Version: {updates.available()['version']}.")
+    else:
+        messages.success(request, f"Die App ist auf dem neusten Stand (Version {__version__}).")
+    return redirect(reverse("settings") + "#version")
+
+
 # --- Einstellungen und Sicherungen ----------------------------------------------------------------
 
 
@@ -203,6 +218,8 @@ def settings_page(request):
         "form": form,
         "backups": backup.list_backups()[:30],
         "icloud": backup.icloud_dir(),
+        "update": updates.available(),
+        "can_install": updates.can_install(),
         "last_backup": backup.last_backup_time(),
     })
 

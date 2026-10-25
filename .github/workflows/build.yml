@@ -62,7 +62,9 @@ jobs:
         run: |
           APP="dist/Börse EC Thun.app"
           xattr -cr "$APP"
-          if ! { codesign --force --sign - "$APP" && codesign --verify --deep --strict --verbose=2 "$APP"; } > sign.log 2>&1; then
+          # Python.framework kommt mit einer Signatur, die Dateien verlangt, die PyInstaller nicht mitkopiert
+          codesign --force --sign - "$APP/Contents/Frameworks/Python.framework" > sign.log 2>&1 || true
+          if ! { codesign --force --sign - "$APP" && codesign --verify --deep --strict --verbose=2 "$APP"; } >> sign.log 2>&1; then
             cat sign.log; sh "$RUNNER_TEMP/annotate.sh" Versiegeln sign.log; exit 1
           fi
           cat sign.log

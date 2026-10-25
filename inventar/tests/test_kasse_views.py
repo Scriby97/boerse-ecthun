@@ -43,12 +43,12 @@ class KasseViewTests(TestCase):
         self.assertEqual(self.client.session["kasse"], [])
 
         detail = self.client.get(reverse("sale_detail", args=[sale.pk]))
-        self.assertContains(detail, "Jetzt auszahlen")
+        self.assertContains(detail, "kommen auf die Tagesabrechnung")
         pdf = self.client.get(reverse("sale_receipt", args=[sale.pk]))
         self.assertEqual(pdf["Content-Type"], "application/pdf")
         self.assertTrue(pdf.content.startswith(b"%PDF"))
 
-        self.client.post(reverse("sale_payout", args=[sale.pk]), {"person": self.anna.pk, "method": "twint"})
+        self.client.post(reverse("payout_person", args=[self.anna.pk]), {"method": "twint", "day": "2026-10-21"})
         self.assertEqual(Payout.objects.get().amount, Decimal("4.25"))
 
     def test_doppelte_nummer_fragt_nach(self):

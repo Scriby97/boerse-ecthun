@@ -4,24 +4,28 @@
 {% block content %}
 <h1>Abrechnen</h1>
 
-<h2>Offen auszuzahlen · CHF {{ open_total|chf }}</h2>
+<h2>Tagesabrechnungen · offen CHF {{ open_total|chf }}</h2>
+<p class="muted">Pro Besitzerin und Verkaufstag eine Abrechnung. Sie lässt sich jederzeit abschliessen, auch schon am Nachmittag. Spätere Verkäufe am selben Tag kommen dann auf eine neue Abrechnung.</p>
 <table class="table">
-  <thead><tr><th>Besitzerin</th><th>Kontakt</th><th class="num">offen</th><th>Auszahlen per</th></tr></thead>
+  <thead><tr><th>Verkaufstag</th><th>Besitzerin</th><th>Kontakt</th><th class="num">Artikel</th><th class="num">CHF</th><th>Abschliessen per</th></tr></thead>
   <tbody>
-    {% for row in open_rows %}
+    {% for g in groups %}
       <tr>
-        <td><a href="{% url 'person_detail' row.person.pk %}">{{ row.person.name }}</a></td>
-        <td>{{ row.person.phone }}{% if row.person.twint %} · TWINT{% endif %}{% if row.person.iban %} · IBAN{% endif %}</td>
-        <td class="num">{{ row.amount|chf }}</td>
+        <td>{{ g.day|date:"j.n.Y"|default:"ohne Datum" }}</td>
+        <td><a href="{% url 'person_detail' g.person.pk %}">{{ g.person.name }}</a></td>
+        <td>{{ g.person.phone }}{% if g.person.twint %} · TWINT{% endif %}{% if g.person.iban %} · IBAN{% endif %}</td>
+        <td class="num">{{ g.count }}</td>
+        <td class="num">{{ g.amount|chf }}</td>
         <td>
-          <form method="post" action="{% url 'payout_person' row.person.pk %}" class="payout-buttons compact">
+          <form method="post" action="{% url 'payout_person' g.person.pk %}" class="payout-buttons compact">
             {% csrf_token %}
+            {% if g.day %}<input type="hidden" name="day" value="{{ g.day|date:'Y-m-d' }}">{% endif %}
             {% for value, label in form.method.field.choices %}<button type="submit" name="method" value="{{ value }}">{{ label }}</button>{% endfor %}
           </form>
         </td>
       </tr>
     {% empty %}
-      <tr><td colspan="4" class="muted">Alles ausbezahlt.</td></tr>
+      <tr><td colspan="6" class="muted">Alles ausbezahlt.</td></tr>
     {% endfor %}
   </tbody>
 </table>

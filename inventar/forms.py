@@ -106,6 +106,8 @@ class CheckoutForm(forms.Form):
 class PayoutForm(forms.Form):
     method = forms.ChoiceField(label="Art", choices=Payout.Method.choices)
     date = forms.DateField(label="Datum", required=False)
+    # Verkaufstag der Tagesabrechnung; leer = alles Offene der Person
+    day = forms.DateField(label="Verkaufstag", required=False)
 
 
 class ClubItemForm(forms.ModelForm):

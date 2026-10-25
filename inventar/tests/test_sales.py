@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from inventar import reports, sales
 from inventar.models import Article, Category, ClubItem, Payout, Person, Sale, SaleItem
-from inventar.pdf import receipt_pdf
+from inventar.pdf import payout_pdf, receipt_pdf
 
 
 class SalesTests(TestCase):
@@ -64,7 +64,7 @@ class SalesTests(TestCase):
 
     def test_auszahlung_direkt_nach_verkauf_und_kein_storno_danach(self):
         sale = sales.create_sale(self.entries())
-        payout = sales.record_payout(self.anna, Payout.Method.TWINT, sale=sale)
+        payout = sales.record_payout(self.anna, Payout.Method.TWINT, day=sale.date)
         self.assertEqual(payout.amount, Decimal("29.25"))
         self.kleid.refresh_from_db()
         self.assertEqual((self.kleid.status, self.kleid.payout), (Article.Status.PAID, payout))
@@ -105,3 +105,32 @@ class SalesTests(TestCase):
         self.assertTrue(pdf.startswith(b"%PDF"))
         self.assertGreater(len(pdf), 5000, "mit Logo")
         self.assertEqual(SaleItem.objects.filter(sale=sale).count(), 5)
+
+
+class DailyStatementTests(TestCase):
+    def setUp(self):
+        self.anna = Person.objects.create(name="Muster Anna")
+        self.cat = Category.objects.get(code=1)
+
+    def sell(self, number, day):
+        a = Article.objects.create(number=number, category=self.cat, description=f"Artikel {number}",
+                                   owner=self.anna, price=Decimal("10"))
+        return sales.create_sale([{"kind": "artikel", "article_id": a.pk, "description": a.description,
+                                   "price": "10.00"}], date=day)
+
+    def test_mehrere_verkaeufe_eines_tages_eine_abrechnung(self):
+        day1, day2 = dt.date(2026, 10, 24), dt.date(2026, 10, 25)
+        self.sell(1001, day1)
+        self.sell(1002, day1)
+        self.sell(1003, day2)
+        groups = sales.daily_groups()
+        self.assertEqual([(g["day"], g["count"], g["amount"]) for g in groups],
+                         [(day2, 1, Decimal("6.50")), (day1, 2, Decimal("13.00"))])
+
+        payout = sales.record_payout(self.anna, Payout.Method.TWINT, day=day1, note="Tagesabrechnung 24.10.2026")
+        self.assertEqual((payout.amount, payout.sale_items.count()), (Decimal("13.00"), 2))
+        self.assertTrue(receipt_ok := payout_pdf(payout).startswith(b"%PDF"), receipt_ok)
+
+        # Am Nachmittag abgeschlossen, danach noch ein Verkauf am selben Tag → neue Tagesabrechnung
+        self.sell(1004, day1)
+        self.assertEqual([(g["day"], g["count"]) for g in sales.daily_groups()], [(day2, 1), (day1, 1)])

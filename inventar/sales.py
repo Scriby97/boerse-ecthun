@@ -123,15 +123,31 @@ def open_amounts() -> dict[int, Decimal]:
     return dict(totals)
 
 
+def daily_groups() -> list[dict]:
+    """Offene Anteile pro Besitzerin und Verkaufstag (= Tagesabrechnungen), neuester Tag zuerst."""
+    groups: dict[tuple, dict] = {}
+    for item in open_sale_items().select_related("sale", "owner"):
+        g = groups.setdefault((item.sale.date, item.owner_id),
+                              {"day": item.sale.date, "person": item.owner, "count": 0, "amount": ZERO})
+        g["count"] += 1
+        g["amount"] += item.owner_amount
+    for article in open_imported_articles().select_related("owner"):
+        g = groups.setdefault((article.sold_date, article.owner_id),
+                              {"day": article.sold_date, "person": article.owner, "count": 0, "amount": ZERO})
+        g["count"] += 1
+        g["amount"] += article.owner_amount
+    return sorted(groups.values(), key=lambda g: (-(g["day"].toordinal() if g["day"] else 0), g["person"].name))
+
+
 @transaction.atomic
-def record_payout(person: Person, method: str, date: dt.date | None = None, sale: Sale | None = None,
+def record_payout(person: Person, method: str, date: dt.date | None = None, day: dt.date | None = None,
                   note: str = "") -> Payout:
-    """Zahlt alles Offene einer Person aus – oder nur die Posten eines Verkaufs (direkt nach dem Verkauf)."""
-    items = list(open_sale_items().filter(owner=person).select_related("article"))
+    """Zahlt Offenes einer Person aus: alles, oder nur die Verkäufe eines Tages (Tagesabrechnung)."""
+    items = list(open_sale_items().filter(owner=person).select_related("article", "sale"))
     articles = list(open_imported_articles().filter(owner=person))
-    if sale is not None:
-        items = [i for i in items if i.sale_id == sale.pk]
-        articles = []
+    if day is not None:
+        items = [i for i in items if i.sale.date == day]
+        articles = [a for a in articles if a.sold_date == day]
     amount = sum((i.owner_amount for i in items), ZERO) + sum((a.owner_amount for a in articles), ZERO)
     if amount <= 0:
         raise SaleError(f"Für {person.name} ist nichts offen.")

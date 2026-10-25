@@ -199,18 +199,13 @@ def kasse_checkout(request):
 def sale_detail(request, pk):
     sale = get_object_or_404(Sale.objects.select_related("buyer"), pk=pk)
     items = list(sale.items.select_related("owner", "article", "payout"))
-    # Direkt nach dem Verkauf auszahlen: offene Anteile dieses Verkaufs pro Besitzerin
-    to_pay: dict[int, dict] = {}
-    for item in items:
-        if item.owner and item.owner_amount > 0 and not item.payout and not sale.cancelled_at:
-            entry = to_pay.setdefault(item.owner_id, {"person": item.owner, "amount": Decimal("0")})
-            entry["amount"] += item.owner_amount
+    # Anteile der Besitzerinnen kommen auf deren Tagesabrechnung (Abrechnen)
+    owners = sorted({i.owner.name for i in items if i.owner and i.owner_amount > 0 and not i.payout})
     return render(request, "inventar/sale_detail.html", {
         "people": sorted(Person.objects.all(), key=lambda p: sort_key(p.name)),
         "sale": sale,
         "items": items,
-        "to_pay": list(to_pay.values()),
-        "methods": Payout.Method.choices,
+        "daily_owners": [] if sale.cancelled_at else owners,
     })
 
 
@@ -263,23 +258,6 @@ def sale_cancel(request, pk):
     return redirect("sale_detail", pk=sale.pk)
 
 
-@require_POST
-def sale_payout(request, pk):
-    sale = get_object_or_404(Sale, pk=pk)
-    person = get_object_or_404(Person, pk=request.POST.get("person"))
-    method = request.POST.get("method")
-    if method not in Payout.Method.values:
-        messages.error(request, "Bitte die Art der Auszahlung wählen.")
-        return redirect("sale_detail", pk=sale.pk)
-    try:
-        payout = sales.record_payout(person, method, sale=sale)
-    except sales.SaleError as error:
-        messages.error(request, str(error))
-    else:
-        messages.success(request, f"{person.name}: CHF {payout.amount:.2f} per {payout.get_method_display()} ausbezahlt.")
-    return redirect("sale_detail", pk=sale.pk)
-
-
 def sale_list(request):
     period = request.GET.get("periode", "monat")
     if period not in reports.PERIODS:
@@ -301,13 +279,10 @@ def sale_list(request):
 
 
 def payout_list(request):
-    amounts = sales.open_amounts()
-    persons = {p.pk: p for p in Person.objects.filter(pk__in=amounts)}
-    open_rows = sorted(({"person": persons[pk], "amount": amount} for pk, amount in amounts.items()),
-                       key=lambda r: r["person"].name)
+    groups = sales.daily_groups()
     return render(request, "inventar/payout_list.html", {
-        "open_rows": open_rows,
-        "open_total": sum(amounts.values(), Decimal("0")),
+        "groups": groups,
+        "open_total": sum((g["amount"] for g in groups), Decimal("0")),
         "payouts": Payout.objects.select_related("person")[:50],
         "form": PayoutForm(),
     })
@@ -320,8 +295,10 @@ def payout_person(request, pk):
     if not form.is_valid():
         messages.error(request, "Bitte die Art der Auszahlung wählen.")
         return redirect(request.POST.get("next") or "payout_list")
+    day = form.cleaned_data.get("day")
     try:
-        payout = sales.record_payout(person, form.cleaned_data["method"], date=form.cleaned_data["date"])
+        payout = sales.record_payout(person, form.cleaned_data["method"], date=form.cleaned_data["date"], day=day,
+                                     note=f"Tagesabrechnung {day:%d.%m.%Y}" if day else "")
     except sales.SaleError as error:
         messages.error(request, str(error))
     else:

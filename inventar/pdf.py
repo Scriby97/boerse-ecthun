@@ -174,6 +174,8 @@ def payout_pdf(payout: Payout, settings: AppSettings | None = None) -> bytes:
     pdf.set_font("Helvetica", "", 9)
     pdf.cell(0, 5, latin1(f"Ausbezahlt am {payout.date:%d.%m.%Y} per {payout.get_method_display()}"),
              new_x="LMARGIN", new_y="NEXT")
+    if payout.note:
+        pdf.cell(0, 5, latin1(payout.note), new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
 
     rows = []

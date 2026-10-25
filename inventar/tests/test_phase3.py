@@ -103,7 +103,7 @@ class DocumentTests(TestCase):
     def test_abrechnung_fuer_besitzerin(self):
         sale = sales.create_sale([{"kind": "artikel", "article_id": self.kleid.pk, "description": "Kürkleid",
                                    "size": "8–10", "price": "45.00"}])
-        payout = sales.record_payout(self.anna, Payout.Method.TWINT, sale=sale)
+        payout = sales.record_payout(self.anna, Payout.Method.TWINT, day=sale.date)
         self.assertTrue(payout_pdf(payout).startswith(b"%PDF"))
         response = self.client.get(reverse("payout_pdf", args=[payout.pk]))
         self.assertEqual(response["Content-Type"], "application/pdf")

@@ -32,7 +32,6 @@ urlpatterns = [
     path("verkauf/<int:pk>/bezeichnungen/", views_kasse.sale_descriptions, name="sale_descriptions"),
     path("verkauf/<int:pk>/kaeuferin/", views_kasse.sale_buyer, name="sale_buyer"),
     path("verkauf/<int:pk>/stornieren/", views_kasse.sale_cancel, name="sale_cancel"),
-    path("verkauf/<int:pk>/auszahlen/", views_kasse.sale_payout, name="sale_payout"),
     path("abrechnen/", views_kasse.payout_list, name="payout_list"),
     path("abrechnen/<int:pk>/", views_kasse.payout_person, name="payout_person"),
     path("club/", views_admin.club_items, name="club_items"),

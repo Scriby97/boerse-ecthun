@@ -81,34 +81,57 @@ jobs:
           fi
           grep -v -E '^--(prepared|validated)' sign.log || true
       # ZIP für den Update-Knopf in der App, DMG (Fenster zum Rüberziehen) für die erste Installation
-      - name: ZIP und DMG erstellen
+      # ZIP: für den Update-Knopf in der App und als Vorlage für das DMG (eigener Schritt unten)
+      - name: ZIP erstellen und prüfen
         run: |
           ditto -c -k --keepParent "dist/Börse EC Thun.app" "dist/Boerse-EC-Thun-${{ matrix.arch }}.zip"
-          # Installationsfenster: Hintergrund mit Pfeil (für normale und Retina-Bildschirme), feste Symbol-Plätze
-          tiffutil -cathidpicheck scripts/dmg/background.png scripts/dmg/background@2x.png -out "$RUNNER_TEMP/background.tiff"
-          pip install dmgbuild
-          dmgbuild -s scripts/dmg_settings.py -D app="dist/Börse EC Thun.app" -D background="$RUNNER_TEMP/background.tiff" "Börse EC Thun" "dist/Boerse-EC-Thun-${{ matrix.arch }}.dmg"
-      - name: Signatur nach dem Auspacken prüfen
-        run: |
           mkdir -p "$RUNNER_TEMP/zip" && ditto -x -k "dist/Boerse-EC-Thun-${{ matrix.arch }}.zip" "$RUNNER_TEMP/zip"
-          hdiutil attach -nobrowse -readonly -mountpoint "$RUNNER_TEMP/dmg" "dist/Boerse-EC-Thun-${{ matrix.arch }}.dmg"
-          ok=0
-          for app in "$RUNNER_TEMP/zip/Börse EC Thun.app" "$RUNNER_TEMP/dmg/Börse EC Thun.app"; do
-            codesign --verify --deep --strict --verbose=2 "$app" >> verify.log 2>&1 || ok=1
-          done
-          hdiutil detach "$RUNNER_TEMP/dmg"
-          cat verify.log
-          if [ $ok -ne 0 ]; then sh "$RUNNER_TEMP/annotate.sh" "Signatur nach dem Auspacken" verify.log; exit 1; fi
+          if ! codesign --verify --deep --strict --verbose=2 "$RUNNER_TEMP/zip/Börse EC Thun.app" > verify.log 2>&1; then
+            cat verify.log; sh "$RUNNER_TEMP/annotate.sh" "Signatur nach dem Auspacken" verify.log; exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
-          name: Boerse-EC-Thun-${{ matrix.arch }}
-          path: |
-            dist/Boerse-EC-Thun-${{ matrix.arch }}.zip
-            dist/Boerse-EC-Thun-${{ matrix.arch }}.dmg
+          name: Boerse-EC-Thun-${{ matrix.arch }}-zip
+          path: dist/Boerse-EC-Thun-${{ matrix.arch }}.zip
       - name: An das Release hängen
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist/Boerse-EC-Thun-${{ matrix.arch }}.zip
-            dist/Boerse-EC-Thun-${{ matrix.arch }}.dmg
+          files: dist/Boerse-EC-Thun-${{ matrix.arch }}.zip
+
+  # Installationsfenster (DMG) für beide Chips. Alles auf dem Apple-Chip-Rechner: auf dem Intel-Rechner stürzt
+  # dmgbuild ab (mac_alias: zu grosse Dateinummern). Die App darin ist unverändert die signierte aus dem ZIP.
+  dmg:
+    needs: mac
+    runs-on: macos-15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Boerse-EC-Thun-*-zip
+          merge-multiple: true
+          path: zips
+      - name: DMG erstellen und prüfen
+        run: |
+          pip install dmgbuild
+          # Hintergrund mit Pfeil für normale und Retina-Bildschirme
+          tiffutil -cathidpicheck scripts/dmg/background.png scripts/dmg/background@2x.png -out "$RUNNER_TEMP/background.tiff"
+          mkdir -p dist
+          for arch in apple-chip intel; do
+            mkdir -p "$RUNNER_TEMP/$arch" && ditto -x -k "zips/Boerse-EC-Thun-$arch.zip" "$RUNNER_TEMP/$arch"
+            dmgbuild -s scripts/dmg_settings.py -D app="$RUNNER_TEMP/$arch/Börse EC Thun.app" -D background="$RUNNER_TEMP/background.tiff" "Börse EC Thun" "dist/Boerse-EC-Thun-$arch.dmg"
+            hdiutil attach -nobrowse -readonly -mountpoint "$RUNNER_TEMP/mnt-$arch" "dist/Boerse-EC-Thun-$arch.dmg"
+            codesign --verify --deep --strict --verbose=2 "$RUNNER_TEMP/mnt-$arch/Börse EC Thun.app"
+            hdiutil detach "$RUNNER_TEMP/mnt-$arch"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Boerse-EC-Thun-dmg
+          path: dist/*.dmg
+      - name: An das Release hängen
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.dmg

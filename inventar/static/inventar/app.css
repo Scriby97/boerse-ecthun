@@ -185,3 +185,5 @@ button.danger:hover { background: #991b1b; }
 .guide { max-width: 46rem; line-height: 1.55; }
 .guide h2 { margin-top: 1.8rem; }
 .guide li { margin-bottom: 0.3rem; }
+.sidebar a.nav-update { margin: 0.4rem 0; background: #fef3c7; color: #78350f; -webkit-text-fill-color: #78350f; font-weight: 600; }
+.sidebar a.nav-update::before { content: "↻ "; }

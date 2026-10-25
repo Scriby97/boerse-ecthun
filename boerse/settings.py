@@ -57,6 +57,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "inventar.context_processors.app_version",
                 "inventar.context_processors.open_statements",
+                "inventar.context_processors.update_available",
             ],
         },
     },

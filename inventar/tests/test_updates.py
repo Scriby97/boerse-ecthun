@@ -108,3 +108,15 @@ class UpdateCheckTests(TestCase):
     def test_ohne_internet(self):
         response = self.search(side_effect=OSError("offline"))
         self.assertContains(response, "Keine Verbindung zu GitHub")
+
+
+class NavigationHintTests(TestCase):
+    def tearDown(self):
+        updates._available = None
+
+    def test_hinweis_auf_allen_seiten(self):
+        self.assertNotContains(self.client.get(reverse("article_list")), "Neue Version")
+        updates._available = {"version": "9.0.0", "url": RELEASE["html_url"], "download": None}
+        response = self.client.get(reverse("article_list"))
+        self.assertContains(response, "Neue Version 9.0.0")
+        self.assertContains(response, reverse("settings") + "#version")

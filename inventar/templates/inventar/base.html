@@ -19,6 +19,7 @@
     <a href="{% url 'payout_list' %}" {% if 'payout' in name %}aria-current="page"{% endif %}>Abrechnen{% if open_statements %} <span class="nav-count" aria-label="{{ open_statements }} offene Abrechnungen">{{ open_statements }}</span>{% endif %}</a>
     <a href="{% url 'person_list' %}" {% if 'person' in name %}aria-current="page"{% endif %}>Kunden</a>
     <a href="{% url 'club_items' %}" {% if 'club' in name %}aria-current="page"{% endif %}>Club EC Thun</a>
+    {% if update_available %}<a class="nav-update" href="{% url 'settings' %}#version">Neue Version {{ update_available.version }}</a>{% endif %}
     <a class="secondary" href="{% url 'export' %}" {% if 'export' in name %}aria-current="page"{% endif %}>Export</a>
     <a class="quiet" href="{% url 'settings' %}" {% if name == 'settings' %}aria-current="page"{% endif %}>Einstellungen</a>
     <a class="quiet" href="{% url 'import_upload' %}" {% if 'import' in name %}aria-current="page"{% endif %}>Import</a>

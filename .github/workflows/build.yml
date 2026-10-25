@@ -50,7 +50,9 @@ jobs:
           SH
       - name: Signatur nach PyInstaller (nur zur Info)
         run: |
-          codesign --verify --deep --strict --verbose=4 "dist/Börse EC Thun.app" 2>&1 | grep -v -E '^--(prepared|validated)' || true
+          codesign --verify --deep --strict --verbose=4 "dist/Börse EC Thun.app" 2>&1 | grep -v -E '^--(prepared|validated)' > pyi.log || true
+          cat pyi.log
+          echo "::notice title=Signatur nach PyInstaller::$(tail -c 3000 pyi.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
       # Zuerst testen: danach darf sich am App-Paket nichts mehr ändern, sonst stimmt die Signatur nicht
       - name: Selbsttest der fertigen App
         run: |

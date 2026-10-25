@@ -54,7 +54,7 @@ Datenschutz & Sicherheit > «Dennoch öffnen» (steht in der Anleitung). Erschei
 Signatur ungültig – der Bau prüft das und bricht dann ab.
 
 Lokal (Windows) lässt sich das Verpacken mit `pyinstaller --noconfirm boerse.spec` testen,
-dann `dist/Börse EC Thun/Börse EC Thun.exe --selftest`.
+dann `dist/BoerseECThun/BoerseECThun.exe --selftest`.
 
 ## Aufbau
 

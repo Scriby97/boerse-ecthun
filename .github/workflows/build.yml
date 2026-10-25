@@ -57,7 +57,7 @@ jobs:
       - name: Selbsttest der fertigen App
         run: |
           set -o pipefail
-          if ! "dist/Börse EC Thun.app/Contents/MacOS/Börse EC Thun" --selftest 2>&1 | tee selftest.log; then
+          if ! "dist/Börse EC Thun.app/Contents/MacOS/BoerseECThun" --selftest 2>&1 | tee selftest.log; then
             sh "$RUNNER_TEMP/annotate.sh" Selbsttest selftest.log; exit 1
           fi
       # Die Programmteile signiert PyInstaller; hier wird das ganze Paket versiegelt (ad hoc). Ist die Signatur
@@ -72,7 +72,7 @@ jobs:
           if ! { codesign --force --sign - "$APP" && codesign --verify --deep --strict --verbose=4 "$APP"; } >> sign.log 2>&1; then
             grep -v -E '^--(prepared|validated)' sign.log > sign.err || true
             {
-              echo "== ohne --deep"; codesign --verify --strict -vvvv "$APP" 2>&1 | tail -15
+              echo "== ohne --deep"; codesign --verify --strict -vvvv "$APP" 2>&1 | grep -v -E '^--(prepared|validated)' | tail -15
               echo "== Framework"; codesign --verify --strict -vvvv "$APP/Contents/Frameworks/Python.framework" 2>&1 | tail -8
               echo "== Aufbau"; ls -la "$APP/Contents/Frameworks/Python.framework" "$APP/Contents/Frameworks/Python.framework/Versions" "$APP/Contents/Frameworks/Python.framework/Versions/Current/" 2>&1
               echo "== Symlinks nach aussen"; find "$APP" -type l -exec sh -c 'case "$(readlink "$1")" in /*) echo "$1 -> $(readlink "$1")";; esac' _ {} \; | head -10

@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from . import club_import, importer, sales, updates
+from . import persons as persons_module
 from .backup import backup_database, backup_is_stale, ensure_daily_backup, last_backup_time
 from .forms import ArticleForm, ImportUploadForm, PersonForm
 from .models import Article, Category, Payout, Person, Sale
@@ -155,19 +156,16 @@ def _known_sizes() -> list[str]:
 
 def person_list(request):
     q = request.GET.get("q", "").strip()
-    persons = Person.objects.annotate(
-        in_stock=Count("articles", filter=Q(articles__status=Article.Status.STOCK)),
-        sold=Count("articles", filter=Q(articles__status__in=[Article.Status.SOLD, Article.Status.PAID])),
-    )
-    if q:
-        persons = persons.filter(
-            Q(name__icontains=q) | Q(phone__icontains=q) | Q(email__icontains=q) | Q(notes__icontains=q)
-        )
+    sort = request.GET.get("sortierung", "name")
+    if sort not in persons_module.SORTS:
+        sort = "name"
+    people = persons_module.listing(q, sort)
     open_amounts = sales.open_amounts()
-    persons = list(persons)
-    for p in persons:
+    for p in people:
         p.open_payout = open_amounts.get(p.pk)
-    return render(request, "inventar/person_list.html", {"persons": persons, "q": q})
+    return render(request, "inventar/person_list.html", {
+        "persons": people, "q": q, "sort": sort, "sorts": persons_module.SORTS,
+    })
 
 
 def person_detail(request, pk):

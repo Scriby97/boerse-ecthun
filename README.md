@@ -39,8 +39,10 @@ das PDF mit `python manage.py anleitung_pdf` neu schreiben.
 
 GitHub Actions (`.github/workflows/build.yml`) testet bei jedem Push und baut die Mac-App für Apple-Chip und Intel
 (PyInstaller, Rezept `boerse.spec`), inklusive Selbsttest der fertigen App, versiegelt sie (Ad-hoc-Signatur, ohne
-Apple-Entwicklerkonto) und prüft die Signatur. Pro Chip entstehen ein DMG (Installation: App auf «Programme» ziehen)
-und ein ZIP (für den Update-Knopf); beim Lauf unter «Artifacts».
+Apple-Entwicklerkonto) und prüft die Signatur. Pro Chip entsteht ein ZIP (für den Update-Knopf). Der Job «dmg» packt
+danach beide Apps unverändert in ein DMG mit Installationsfenster (dmgbuild, `scripts/dmg_settings.py`, Hintergrund
+aus `scripts/dmg_background.py`) – auf dem Apple-Chip-Rechner, weil dmgbuild auf dem Intel-Rechner abstürzt.
+Alles liegt beim Lauf unter «Artifacts».
 
 Neue Version ausliefern:
 1. `__version__` in `boerse/__init__.py` erhöhen, committen
@@ -68,7 +70,13 @@ dann `dist/BoerseECThun/BoerseECThun.exe --selftest`.
 - `inventar/reports.py` – Verkauft-Übersicht pro Woche, Monat, Jahr
 - `inventar/pdf.py` – PDFs: Kaufquittung, Clubabrechnung, Abrechnung Besitzerin, Etiketten 57 × 32 mm (fpdf2)
 - `inventar/exports.py` – Excel: Gesamtexport und Etiketten-Tabelle für DYMO Connect
+- `inventar/persons.py` – Kundendatei: Sortierung, Profil-Übersicht, Löschen und Zusammenführen
+- `inventar/club_import.py` – Clubbestand und frühere Clubverkäufe aus Tabellen übernehmen
+- `inventar/numbers_export.py` – Numbers-Export im Aufbau der ursprünglichen Liste (wieder importierbar)
+- `inventar/delivery.py` – Dateien liefern: im App-Fenster speichern und öffnen, im Browser herunterladen
+- `inventar/updates.py` – neue Versionen: Hinweis, «Nach Updates suchen», Aktualisieren per Knopf
 - `app.py` – Start der fertigen App
+- `scripts/` – App-Icon und Installationsfenster (DMG) erzeugen
 
 ## Stand
 
@@ -87,3 +95,12 @@ Sicherungen: täglich, beim Schliessen, vor Import/Wiederherstellen; lokal und i
 
 Phase 4 (Mac-App): eigenes Fenster (pywebview, Downloads erlaubt), Selbsttest, PyInstaller-Rezept,
 Bau und Release über GitHub Actions, Hinweis auf neue Versionen auf der Startseite.
+
+Seither (Releases auf GitHub):
+- 1.0.1–1.0.3: Dateien im App-Fenster speichern statt herunterladen, Clubbestand und laufende Clubquittung mit
+  «Begleichen», Zusatzinformation, Quittungstexte änderbar.
+- 1.0.4: Kundenliste alphabetisch und sortierbar, Kundenprofil gegliedert, Personen zusammenführen/löschen,
+  Käuferin nachträglich, Tagesabrechnung pro Besitzerin und Tag, Grössentabelle.
+- 1.0.5: Knöpfe auf dem Mac lesbar, Quittung ohne Nummer, Zahl offener Abrechnungen im Menü, Sortierung in Inventar
+  und Verkauft-Liste, Numbers-Export, App-Icon, Anleitung (App und PDF), gültige Signatur, DMG, Update-Knopf.
+- 1.0.6: Hinweis «Neue Version» im Menü, «Nach Updates suchen» in den Einstellungen, Installationsfenster mit Pfeil.

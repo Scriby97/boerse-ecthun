@@ -10,28 +10,35 @@ ab und öffnet sie gleich in Vorschau, Numbers oder Excel.</p>
 <h2>Installation</h2>
 <ol>
   <li>Auf <b>github.com/Scriby97/boerse-ecthun/releases</b> die neuste Version öffnen.</li>
-  <li>Die passende ZIP-Datei laden: <b>Boerse-EC-Thun-apple-chip.zip</b> für Macs mit Apple-Chip (M1, M2, ...),
-    <b>Boerse-EC-Thun-intel.zip</b> für ältere Macs mit Intel. Welcher Chip drin ist, steht unter
+  <li>Die passende Datei laden: <b>Boerse-EC-Thun-apple-chip.dmg</b> für Macs mit Apple-Chip (M1, M2, ...),
+    <b>Boerse-EC-Thun-intel.dmg</b> für ältere Macs mit Intel. Welcher Chip drin ist, steht unter
     Apple-Menü &gt; Über diesen Mac.</li>
-  <li>ZIP doppelklicken, «Börse EC Thun» in den Ordner <b>Programme</b> ziehen.</li>
-  <li>Beim ersten Start mit der rechten Maustaste auf die App klicken und «Öffnen» wählen.</li>
+  <li>Die Datei im Ordner Downloads doppelklicken. Es öffnet sich ein Fenster mit der App und dem Ordner
+    «Programme»: die App auf «Programme» ziehen. Danach das Fenster schliessen und in der Seitenleiste des Finders
+    «Börse EC Thun» auswerfen.</li>
+  <li>Die App im Ordner Programme doppelklicken.</li>
 </ol>
-<p><b>Meldung «beschädigt» oder «kann nicht geöffnet werden»:</b> Die App ist nicht bei Apple registriert. Macs
-markieren solche Downloads aus dem Internet. Abhilfe: das Programm Terminal öffnen und eingeben</p>
-<p><b>xattr -dr com.apple.quarantine "/Applications/Börse EC Thun.app"</b></p>
-<p>Mit Enter bestätigen, dann startet die App normal. Wird die App auf einem anderen Rechner geladen und per
-USB-Stick übertragen, tritt die Meldung meistens gar nicht auf.</p>
+<p><b>Beim allerersten Start</b> meldet der Mac: «Apple konnte nicht überprüfen, ob «Börse EC Thun» frei von
+Schadsoftware ist». Das liegt daran, dass die App nicht bei Apple registriert ist. So gibt man sie einmalig frei:</p>
+<ol>
+  <li>In der Meldung «Fertig» klicken (nicht «In den Papierkorb»).</li>
+  <li>Apple-Menü &gt; Systemeinstellungen &gt; Datenschutz &amp; Sicherheit öffnen und ganz nach unten scrollen.</li>
+  <li>Bei ««Börse EC Thun» wurde blockiert» auf <b>Dennoch öffnen</b> klicken, mit dem Mac-Passwort bestätigen und in der
+    nächsten Meldung nochmals «Dennoch öffnen» wählen.</li>
+</ol>
+<p>Danach startet die App immer normal. Wird die App per USB-Stick von einem anderen Rechner übertragen, erscheint die
+Meldung meistens gar nicht.</p>
 
 <h2>Update auf eine neue Version</h2>
 <p>Hat der Mac Internet, zeigt die Startseite einen Hinweis, sobald es eine neue Version gibt.</p>
 <ol>
-  <li>Zur Sicherheit unter Einstellungen «Jetzt sichern» klicken.</li>
-  <li>Die App schliessen.</li>
-  <li>Die neue Version laden wie bei der Installation und in «Programme» ziehen, «Ersetzen» wählen.</li>
-  <li>Falls nötig den Terminal-Befehl von oben nochmals ausführen.</li>
+  <li>Auf <b>Jetzt aktualisieren</b> klicken.</li>
+  <li>Die App lädt die neue Version, schliesst sich und startet nach ein paar Sekunden von selbst neu.</li>
 </ol>
-<p>Die Daten liegen nicht in der App, sondern in einem eigenen Ordner. Beim Ersetzen der App bleibt alles erhalten,
-die neue Version macht mit dem bisherigen Stand weiter.</p>
+<p>Dabei erscheint keine Meldung von macOS. Die Daten liegen nicht in der App, sondern in einem eigenen Ordner: beim
+Update bleibt alles erhalten, die neue Version macht mit dem bisherigen Stand weiter. Klappt das Aktualisieren
+einmal nicht, läuft die bisherige Version weiter; dann die neue Version wie bei der Installation laden und in
+«Programme» ziehen («Ersetzen» wählen).</p>
 
 <h2>Daten und Sicherungen</h2>
 <p>Die Daten liegen im Ordner <b>~/Library/Application Support/BoerseECThun</b> (im Finder: Gehe zu &gt; Gehe zum
@@ -150,7 +157,8 @@ einschalten, damit die Sicherungen auch ausser Haus liegen.</p>
   <li>Python, Django und SQLite; die App startet einen Server nur auf dem eigenen Rechner und zeigt ihn in einem
     Fenster.</li>
   <li>Neue Version: Versionsnummer in boerse/__init__.py erhöhen, Tag v1.x.y pushen. GitHub baut die Mac-App für
-    Apple-Chip und Intel und legt sie unter «Releases» ab.</li>
+    Apple-Chip und Intel und legt sie unter «Releases» ab: DMG zum Installieren, ZIP für den Knopf «Jetzt
+    aktualisieren».</li>
   <li>Die Datenbank boerse.sqlite3 ist eine gewöhnliche SQLite-Datei und lässt sich mit jedem SQLite-Programm
     öffnen.</li>
 </ul>

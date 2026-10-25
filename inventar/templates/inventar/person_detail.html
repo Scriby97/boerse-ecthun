@@ -30,40 +30,21 @@
   </form>
 {% endif %}
 
-{% if open_items %}
-<h2>Offene Posten ohne Nummer</h2>
-<table class="table">
-  <thead><tr><th>Datum</th><th>Bezeichnung</th><th class="num">CHF</th><th class="num">Anteil</th></tr></thead>
-  <tbody>
-    {% for i in open_items %}
-      <tr><td><a href="{% url 'sale_detail' i.sale_id %}">{{ i.sale.date|date:"j.n.Y" }}</a></td><td>{{ i.description }}</td><td class="num">{{ i.price|chf }}</td><td class="num">{{ i.owner_amount|chf }}</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endif %}
+{% load boerse %}
+<h2>Eingebrachte Artikel – an Lager ({{ ov.in_stock|length }}) · CHF {{ ov.in_stock_total|chf }}</h2>
+{% include "inventar/_person_rows.html" with rows=ov.in_stock show_share=False empty="Keine Artikel an Lager." %}
 
-<h2>Eingebrachte Artikel ({{ articles|length }})</h2>
-<table class="table">
-  <thead><tr><th>Nr.</th><th>Bezeichnung</th><th>Grösse</th><th class="num">CHF</th><th>Status</th><th>Verkauft</th><th class="num">Anteil</th></tr></thead>
-  <tbody>
-    {% for a in articles %}
-      <tr>
-        <td><a href="{% url 'article_edit' a.pk %}">{{ a.label }}</a></td>
-        <td>{{ a.description }}</td>
-        <td>{{ a.size }}</td>
-        <td class="num">{{ a.price|chf }}</td>
-        <td><span class="status status-{{ a.status }}">{{ a.get_status_display }}</span></td>
-        <td>{{ a.sold_date|date:"j.n.Y" }}</td>
-        <td class="num">{{ a.owner_amount|chf }}</td>
-      </tr>
-    {% empty %}
-      <tr><td colspan="7" class="muted">Keine Artikel.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<h2>Verkaufte Artikel – offen ({{ ov.sold_open|length }}) · CHF {{ ov.sold_open_total|chf }}, Anteil CHF {{ ov.sold_open_share|chf }}</h2>
+{% include "inventar/_person_rows.html" with rows=ov.sold_open show_share=True empty="Nichts offen." %}
+
+<h2>Verkaufte Artikel – ausbezahlt ({{ ov.sold_paid|length }}) · CHF {{ ov.sold_paid_total|chf }}, Anteil CHF {{ ov.sold_paid_share|chf }}</h2>
+{% include "inventar/_person_rows.html" with rows=ov.sold_paid show_share=True empty="Noch nichts ausbezahlt." %}
+
+<h2>Gekaufte Artikel ({{ ov.bought|length }}) · CHF {{ ov.bought_total|chf }}</h2>
+{% include "inventar/_person_rows.html" with rows=ov.bought show_share=False empty="Noch nichts gekauft." %}
 
 {% if sales %}
-<h2>Einkäufe</h2>
+<h2>Quittungen</h2>
 <table class="table">
   <thead><tr><th>Quittung</th><th>Datum</th><th>Posten</th><th class="num">CHF</th></tr></thead>
   <tbody>
@@ -84,15 +65,5 @@
 </table>
 {% endif %}
 
-{% if purchases %}
-<h2>Gekauft (alte Liste)</h2>
-<table class="table">
-  <thead><tr><th>Nr.</th><th>Bezeichnung</th><th>Datum</th><th class="num">CHF</th></tr></thead>
-  <tbody>
-    {% for a in purchases %}
-      <tr><td>{{ a.label }}</td><td>{{ a.description }}</td><td>{{ a.sold_date|date:"j.n.Y" }}</td><td class="num">{{ a.sale_price|chf }}</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endif %}
+
 {% endblock %}

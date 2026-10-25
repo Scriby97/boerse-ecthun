@@ -176,10 +176,8 @@ def person_detail(request, pk):
         "inventar/person_detail.html",
         {
             "person": person,
-            "articles": articles,
-            "purchases": person.purchases.filter(sale_items__isnull=True).select_related("category"),
+            "ov": persons_module.overview(person),
             "sales": person.sales.prefetch_related("items"),
-            "open_items": sales.open_sale_items().filter(owner=person).exclude(kind="artikel").select_related("sale"),
             "open_payout": sales.open_amounts().get(person.pk),
             "paid_total": (person.payouts.aggregate(s=Sum("amount"))["s"] or Decimal("0"))
             + (articles.filter(status=Article.Status.PAID, payout__isnull=True).aggregate(s=Sum("owner_amount"))["s"]

@@ -1,0 +1,20 @@
+{% load boerse %}
+{% if rows %}
+<table class="table">
+  <thead><tr><th>Nr.</th><th>Bezeichnung</th><th>Grösse</th><th>Datum</th><th class="num">CHF</th>{% if show_share %}<th class="num">Anteil</th>{% endif %}</tr></thead>
+  <tbody>
+    {% for r in rows %}
+      <tr>
+        <td>{% if r.article_pk %}<a href="{% url 'article_edit' r.article_pk %}">{{ r.label }}</a>{% elif r.sale_pk %}<a href="{% url 'sale_detail' r.sale_pk %}">{{ r.label }}</a>{% else %}{{ r.label }}{% endif %}</td>
+        <td>{{ r.description }}</td>
+        <td>{{ r.size }}</td>
+        <td>{{ r.date|date:"j.n.Y" }}</td>
+        <td class="num">{{ r.price|chf }}</td>
+        {% if show_share %}<td class="num">{{ r.share|chf }}</td>{% endif %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">{{ empty }}</p>
+{% endif %}

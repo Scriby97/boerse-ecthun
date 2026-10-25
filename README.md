@@ -29,6 +29,12 @@ Beim Entwickeln liegen Datenbank und Sicherungen in `data/`. Die fertige App nut
 Wie die fertige App starten: `pip install -r requirements-desktop.txt`, dann `python app.py`.
 `python app.py --selftest` prüft die App ohne Fenster in einem Wegwerf-Datenordner.
 
+## Anleitung
+
+Die Anleitung für Stephanie (und eine Nachfolgerin) steht in der App unter «Anleitung» und als PDF in
+`docs/Anleitung_BoerseApp.pdf`. Beides kommt aus `inventar/templates/inventar/_guide_content.html`; nach Änderungen
+das PDF mit `python manage.py anleitung_pdf` neu schreiben.
+
 ## Mac-App bauen und ausliefern
 
 GitHub Actions (`.github/workflows/build.yml`) testet bei jedem Push und baut die Mac-App für Apple-Chip und Intel

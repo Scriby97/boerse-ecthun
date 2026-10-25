@@ -121,3 +121,12 @@ class SortingTests(TestCase):
         page = self.client.get(reverse("article_list"), {"status": "", "sortierung": "-preis"})
         self.assertContains(page, 'value="-preis" selected')
         self.assertEqual(self.client.get(reverse("sale_list"), {"reihenfolge": "alt"}).status_code, 200)
+
+
+class GuideTests(TestCase):
+    def test_seite_und_pdf(self):
+        response = self.client.get(reverse("guide"))
+        self.assertContains(response, "Übergabe an eine andere Person")
+        self.assertContains(response, reverse("guide_pdf"))
+        pdf = self.client.get(reverse("guide_pdf"))
+        self.assertTrue(pdf.content.startswith(b"%PDF"))

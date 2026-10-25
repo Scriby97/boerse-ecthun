@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
@@ -11,7 +12,7 @@ from . import backup, club_import, exports, numbers_export, sales
 from .delivery import NUMBERS, PDF, XLSX, deliver
 from .forms import ClubBackfillForm, ClubItemForm, SettingsForm
 from .models import AppSettings, ClubItem, ClubStatement, Payout, Person, SaleItem
-from .pdf import club_receipt_pdf, club_statement_pdf, labels_pdf, payout_pdf
+from .pdf import club_receipt_pdf, club_statement_pdf, guide_pdf, labels_pdf, payout_pdf
 from .views import filter_articles
 
 MAX_LABELS = 500
@@ -161,6 +162,18 @@ def export_xlsx(request):
 
 def export_numbers(request):
     return deliver(request, numbers_export.build(), f"Boerse-EC-Thun-{timezone.localdate():%Y-%m-%d}.numbers", NUMBERS)
+
+
+# --- Anleitung ------------------------------------------------------------------------------------
+
+
+def guide(request):
+    return render(request, "inventar/guide.html")
+
+
+def guide_pdf_view(request):
+    content = guide_pdf(render_to_string("inventar/_guide_content.html"))
+    return deliver(request, content, "Anleitung-Boerse-EC-Thun.pdf", PDF)
 
 
 # --- Einstellungen und Sicherungen ----------------------------------------------------------------

@@ -21,6 +21,7 @@
     <a class="secondary" href="{% url 'export' %}" {% if 'export' in name %}aria-current="page"{% endif %}>Export</a>
     <a class="quiet" href="{% url 'settings' %}" {% if name == 'settings' %}aria-current="page"{% endif %}>Einstellungen</a>
     <a class="quiet" href="{% url 'import_upload' %}" {% if 'import' in name %}aria-current="page"{% endif %}>Import</a>
+    <a class="quiet" href="{% url 'guide' %}" {% if 'guide' in name %}aria-current="page"{% endif %}>Anleitung</a>
     {% endwith %}
     <span class="version">Version {{ app_version }}</span>
   </nav>

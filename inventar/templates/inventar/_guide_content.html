@@ -1,0 +1,156 @@
+<h2>Überblick</h2>
+<p>Die App führt die Second-Hand-Börse des EC Thun: Inventar mit Etiketten, Kasse mit Quittungen, Abrechnung für
+die Besitzerinnen, Kundendatei und die Clubbekleidung des EC Thun. Sie läuft nur auf dem eigenen Mac und braucht
+kein Internet. Alle Daten bleiben auf diesem Rechner (und in den Sicherungen).</p>
+<p>Links ist das Menü: Start, Erfassen, Kasse, Inventar, Verkauft, Abrechnen, Kunden, Club EC Thun, Export,
+Einstellungen, Import und diese Anleitung. Die rote Zahl bei «Abrechnen» zeigt, wie viele Tagesabrechnungen offen sind.</p>
+<p>Dokumente (Quittungen, Etiketten, Abrechnungen, Exporte) legt die App im Ordner <b>Dokumente &gt; Börse EC Thun</b>
+ab und öffnet sie gleich in Vorschau, Numbers oder Excel.</p>
+
+<h2>Installation</h2>
+<ol>
+  <li>Auf <b>github.com/Scriby97/boerse-ecthun/releases</b> die neuste Version öffnen.</li>
+  <li>Die passende ZIP-Datei laden: <b>Boerse-EC-Thun-apple-chip.zip</b> für Macs mit Apple-Chip (M1, M2, ...),
+    <b>Boerse-EC-Thun-intel.zip</b> für ältere Macs mit Intel. Welcher Chip drin ist, steht unter
+    Apple-Menü &gt; Über diesen Mac.</li>
+  <li>ZIP doppelklicken, «Börse EC Thun» in den Ordner <b>Programme</b> ziehen.</li>
+  <li>Beim ersten Start mit der rechten Maustaste auf die App klicken und «Öffnen» wählen.</li>
+</ol>
+<p><b>Meldung «beschädigt» oder «kann nicht geöffnet werden»:</b> Die App ist nicht bei Apple registriert. Macs
+markieren solche Downloads aus dem Internet. Abhilfe: das Programm Terminal öffnen und eingeben</p>
+<p><b>xattr -dr com.apple.quarantine "/Applications/Börse EC Thun.app"</b></p>
+<p>Mit Enter bestätigen, dann startet die App normal. Wird die App auf einem anderen Rechner geladen und per
+USB-Stick übertragen, tritt die Meldung meistens gar nicht auf.</p>
+
+<h2>Update auf eine neue Version</h2>
+<p>Hat der Mac Internet, zeigt die Startseite einen Hinweis, sobald es eine neue Version gibt.</p>
+<ol>
+  <li>Zur Sicherheit unter Einstellungen «Jetzt sichern» klicken.</li>
+  <li>Die App schliessen.</li>
+  <li>Die neue Version laden wie bei der Installation und in «Programme» ziehen, «Ersetzen» wählen.</li>
+  <li>Falls nötig den Terminal-Befehl von oben nochmals ausführen.</li>
+</ol>
+<p>Die Daten liegen nicht in der App, sondern in einem eigenen Ordner. Beim Ersetzen der App bleibt alles erhalten,
+die neue Version macht mit dem bisherigen Stand weiter.</p>
+
+<h2>Daten und Sicherungen</h2>
+<p>Die Daten liegen im Ordner <b>~/Library/Application Support/BoerseECThun</b> (im Finder: Gehe zu &gt; Gehe zum
+Ordner ... und den Pfad einfügen). Darin ist die Datenbank <b>boerse.sqlite3</b> und der Ordner <b>Sicherungen</b>.</p>
+<ul>
+  <li>Die App sichert automatisch einmal am Tag, beim Schliessen und vor jedem Import oder Zurückholen.</li>
+  <li>Es bleiben die letzten 30 Sicherungen. Ist iCloud Drive eingeschaltet, kommt jede Sicherung zusätzlich in den
+    iCloud-Ordner «Börse EC Thun – Sicherungen».</li>
+  <li>Ist die letzte Sicherung älter als 3 Tage, warnt die Startseite.</li>
+  <li><b>Zurückholen:</b> Einstellungen &gt; Sicherungen, bei der gewünschten Sicherung «Zurückholen». Alles, was
+    danach erfasst wurde, ist dann weg. Den aktuellen Stand sichert die App vorher selbst.</li>
+</ul>
+
+<h2>Artikel erfassen</h2>
+<ul>
+  <li>Unter <b>Erfassen</b> die Kategorie wählen, die App schlägt die nächste freie Nummer vor.</li>
+  <li>Besitzerin aus der Liste wählen oder neu eintragen («Nachname Vorname»).</li>
+  <li>Bezeichnung, Grösse und Preis eingeben. Die Grössentabelle unter dem Formular hilft beim Umrechnen
+    (CXS bis CXL in Körpergrösse und Alter).</li>
+  <li><b>Zusatzinformation</b> ist nur für dich (z. B. Mängel, Herkunft) und erscheint nicht auf der Quittung.</li>
+  <li>Preisvermerk: «gratis» oder «verhandelbar bis 40.00». Auf der Etikette steht nur der volle Preis.</li>
+  <li>Der Anteil der Besitzerin ist normalerweise 65 %. Für einzelne Personen oder Artikel lässt er sich
+    ändern, 0 % heisst geschenkt.</li>
+  <li><b>Etiketten:</b> nach dem Erfassen «Etiketten der heute erfassten» oder im Inventar filtern und «Etiketten
+    drucken (PDF)». Format 57 × 32 mm für den DYMO LabelWriter. «Etiketten als Excel» ist für DYMO Connect.</li>
+</ul>
+
+<h2>Inventar</h2>
+<p>Suchen nach Nummer, Bezeichnung oder Besitzerin, filtern nach Kategorie und Status (an Lager, verkauft,
+ausbezahlt, zurückgegeben). Die Sortierung ist wählbar, zum Beispiel nach Verkaufsdatum neuste oder älteste zuerst.
+Ein Klick auf einen Artikel öffnet ihn zum Bearbeiten.</p>
+
+<h2>Kasse</h2>
+<ol>
+  <li>Artikelnummer eingeben und Enter drücken. Gibt es eine Nummer doppelt (z. B. 1096 und 1096+), fragt die
+    App nach.</li>
+  <li>Der Preis lässt sich im Warenkorb ändern.</li>
+  <li>«+ Artikel ohne Nummer» für eigene Kleider oder Artikel einer Besitzerin ohne Etikette.</li>
+  <li>«+ Clubartikel» für Clubbekleidung, zählt den Bestand herunter.</li>
+  <li>Käuferin wählen (oder neu eintragen), Datum prüfen, mit bar oder TWINT abschliessen.</li>
+</ol>
+<p>Danach öffnet sich die Quittung. Dort lassen sich die Bezeichnungen für die Quittung anpassen und eine Käuferin
+nachtragen. «Quittung als PDF» erstellt die Kaufquittung (ohne Artikelnummern). «Verkauf stornieren» nimmt den Verkauf
+zurück, solange noch nicht ausbezahlt wurde.</p>
+
+<h2>Verkauft</h2>
+<p>Umsatz pro Woche, Monat oder Jahr mit den Anteilen der Besitzerinnen, der Börse und des Clubs. Ein Klick auf einen
+Zeitraum zeigt alle Posten, wahlweise neuste oder älteste zuerst. Darunter die letzten Quittungen.</p>
+
+<h2>Abrechnen</h2>
+<p>Pro Besitzerin und Verkaufstag gibt es eine <b>Tagesabrechnung</b>. Sie lässt sich jederzeit abschliessen, auch
+schon am Nachmittag. Spätere Verkäufe am selben Tag kommen auf eine neue Abrechnung.</p>
+<ul>
+  <li>Bei der Zeile auf TWINT, bar oder Banküberweisung klicken: die Auszahlung ist erfasst.</li>
+  <li>Unter «Letzte Auszahlungen» gibt es die Abrechnung für die Besitzerin als PDF.</li>
+</ul>
+
+<h2>Kunden</h2>
+<ul>
+  <li>Alle Besitzerinnen und Käuferinnen, sortierbar nach Name (A–Z oder Z–A), nach den meisten Artikeln in der
+    Börse oder den meisten gekauften Artikeln.</li>
+  <li>Die Detailseite zeigt eingebrachte Artikel an Lager, verkaufte (offen und ausbezahlt), gekaufte Artikel,
+    Quittungen und Auszahlungen.</li>
+  <li><b>Doppelt erfasst?</b> Auf der Detailseite «Zusammenführen»: alles geht auf die gewählte Person über, die
+    doppelte wird gelöscht.</li>
+  <li>Löschen geht nur bei Personen ohne Artikel, Käufe und Auszahlungen.</li>
+</ul>
+
+<h2>Club EC Thun</h2>
+<ul>
+  <li><b>Bestand Clubbekleidung:</b> pro Artikel und Grösse, mit Preis für die Kundin und Betrag an den Club. Jeder
+    Verkauf an der Kasse zählt eins herunter. Neue Lieferungen beim Artikel im Bestand erhöhen.</li>
+  <li><b>Laufende Clubquittung:</b> alle Clubverkäufe, die noch nicht mit dem Club abgerechnet sind. «Quittung als PDF»
+    erstellt die Quittung für den Club.</li>
+  <li><b>Begleichen:</b> wenn der Club bezahlt ist. Die Quittung wandert unter «Beglichen», eine neue startet.
+    Aus Versehen beglichen? «wieder öffnen».</li>
+  <li>Frühere Verkäufe, die noch nicht in der App sind, lassen sich nachtragen oder als CSV übernehmen. Der Bestand
+    ändert sich dabei nicht.</li>
+</ul>
+
+<h2>Export</h2>
+<ul>
+  <li><b>Excel:</b> alles in einer Datei (Inventar, Verkäufe, Auszahlungen, Kunden, Clubartikel, Clubabrechnungen).</li>
+  <li><b>Numbers-Liste wie früher:</b> die Inventarliste im Aufbau der ursprünglichen Numbers-Datei, dazu Blätter
+    für Posten ohne Nummer, Clubbestand und Clubverkäufe. Gut zum Ablegen, Weitergeben oder als Rückfallebene.</li>
+</ul>
+
+<h2>Einstellungen</h2>
+<p>Standard-Anteil der Besitzerinnen, Name und Ort auf den Quittungen, Dankestext und Zahlungsangaben für die
+Clubquittung. Dazu die Sicherungen (siehe oben).</p>
+
+<h2>Import</h2>
+<p>Liest eine Inventarliste aus Numbers, Excel oder CSV ein, zum Beispiel die Numbers-Datei aus dem Export. Die App
+zeigt zuerst eine Vorschau mit allen Unstimmigkeiten, gespeichert wird erst nach dem Bestätigen. Ein Import ersetzt
+alle Artikel und Personen und ist deshalb gesperrt, sobald in der App verkauft oder ausbezahlt wurde.</p>
+
+<h2>Übergabe an eine andere Person</h2>
+<ol>
+  <li>Auf dem bisherigen Mac unter Einstellungen «Jetzt sichern» klicken. Die neuste Datei aus dem Ordner
+    <b>Sicherungen</b> (siehe «Daten und Sicherungen») auf einen USB-Stick kopieren. Zusätzlich die Numbers-Liste und
+    die Excel-Datei exportieren, damit alles auch ohne App lesbar ist.</li>
+  <li>Auf dem neuen Mac die App installieren (siehe oben) und einmal starten und schliessen.</li>
+  <li>Die Sicherungsdatei in den Ordner <b>~/Library/Application Support/BoerseECThun/Sicherungen</b> des neuen Macs
+    kopieren.</li>
+  <li>App starten, Einstellungen &gt; Sicherungen, bei dieser Datei «Zurückholen».</li>
+  <li>Unter Einstellungen den Namen auf den Quittungen, Ort und Dankestext anpassen. Die Begrüssung auf der Startseite
+    ist fest eingebaut und lässt sich nur in einer neuen Version ändern.</li>
+</ol>
+<p>Nicht vergessen: die DYMO-Etikettendrucker-Software (DYMO Connect) auf dem neuen Mac installieren, und iCloud Drive
+einschalten, damit die Sicherungen auch ausser Haus liegen.</p>
+
+<h2>Technik (für Helferinnen und Helfer)</h2>
+<ul>
+  <li>Quellcode und Versionen: github.com/Scriby97/boerse-ecthun (öffentlich, ohne Personendaten). Die README
+    beschreibt Entwicklung und Auslieferung.</li>
+  <li>Python, Django und SQLite; die App startet einen Server nur auf dem eigenen Rechner und zeigt ihn in einem
+    Fenster.</li>
+  <li>Neue Version: Versionsnummer in boerse/__init__.py erhöhen, Tag v1.x.y pushen. GitHub baut die Mac-App für
+    Apple-Chip und Intel und legt sie unter «Releases» ab.</li>
+  <li>Die Datenbank boerse.sqlite3 ist eine gewöhnliche SQLite-Datei und lässt sich mit jedem SQLite-Programm
+    öffnen.</li>
+</ul>

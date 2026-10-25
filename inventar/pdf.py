@@ -266,3 +266,39 @@ def labels_pdf(articles: list[Article]) -> bytes:
         pdf.set_font("Helvetica", "B", 10)
         pdf.cell(width * 0.55, 5, latin1(price), align="R")
     return bytes(pdf.output())
+
+
+def guide_pdf(content_html: str) -> bytes:
+    """Anleitung (A4) aus demselben HTML wie die Seite «Anleitung» in der App."""
+    from fpdf.fonts import FontFace, TextStyle
+
+    from boerse import __version__
+
+    pdf = FPDF(format="A4")
+    pdf.set_title(latin1("Anleitung - Börse EC Thun"))
+    pdf.set_margins(20, 18, 20)
+    pdf.set_auto_page_break(True, margin=18)
+    pdf.add_page()
+    if LOGO.exists():
+        pdf.image(str(LOGO), x=(pdf.w - 34) / 2, y=18, w=34)
+    pdf.set_y(56)
+    pdf.set_text_color(*NAVY)
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.cell(0, 10, latin1("Börse EC Thun"), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 12)
+    pdf.set_text_color(*MUTED)
+    pdf.cell(0, 7, latin1(f"Anleitung zur App · Version {__version__}"), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(6)
+    pdf.set_text_color(*INK)
+    pdf.set_font("Helvetica", "", 10.5)
+    pdf.write_html(
+        latin1(content_html),
+        tag_styles={
+            "h2": TextStyle(font_family="Helvetica", font_style="B", font_size_pt=14, color=NAVY, t_margin=5, b_margin=0),
+            "p": TextStyle(font_family="Helvetica", font_size_pt=10.5, color=INK, t_margin=2, b_margin=2),
+            "li": FontFace(family="Helvetica", size_pt=10.5, color=INK),
+        },
+        li_prefix_color=NAVY,
+        font_family="helvetica",
+    )
+    return bytes(pdf.output())

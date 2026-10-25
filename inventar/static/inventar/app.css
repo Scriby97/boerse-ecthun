@@ -182,3 +182,6 @@ button.danger:hover { background: #991b1b; }
 .size-table th, .size-table td { padding: 0.2rem 0.6rem 0.2rem 0; text-align: left; border-bottom: 1px solid var(--line); }
 .size-table th { color: var(--muted); font-weight: 600; }
 .nav-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.35rem; height: 1.35rem; padding: 0 0.35rem; margin-left: 0.35rem; border-radius: 999px; background: #dc2626; color: #fff; -webkit-text-fill-color: #fff; font-size: 0.78rem; font-weight: 700; line-height: 1; vertical-align: middle; }
+.guide { max-width: 46rem; line-height: 1.55; }
+.guide h2 { margin-top: 1.8rem; }
+.guide li { margin-bottom: 0.3rem; }

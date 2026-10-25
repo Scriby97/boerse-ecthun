@@ -1,0 +1,11 @@
+{% extends "inventar/base.html" %}
+{% block title %}Anleitung – Börse EC Thun{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Anleitung</h1>
+  <a class="button" href="{% url 'guide_pdf' %}">Als PDF</a>
+</div>
+<article class="guide">
+{% include "inventar/_guide_content.html" %}
+</article>
+{% endblock %}

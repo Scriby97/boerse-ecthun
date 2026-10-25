@@ -83,16 +83,11 @@ jobs:
       # ZIP für den Update-Knopf in der App, DMG (Fenster zum Rüberziehen) für die erste Installation
       - name: ZIP und DMG erstellen
         run: |
-          cd dist
-          ditto -c -k --keepParent "Börse EC Thun.app" "Boerse-EC-Thun-${{ matrix.arch }}.zip"
-          mkdir dmg
-          ditto "Börse EC Thun.app" "dmg/Börse EC Thun.app"
-          ln -s /Applications dmg/Programme
-          for try in 1 2 3; do
-            hdiutil create -volname "Börse EC Thun" -srcfolder dmg -ov -format UDZO "Boerse-EC-Thun-${{ matrix.arch }}.dmg" && break
-            sleep 5
-          done
-          test -f "Boerse-EC-Thun-${{ matrix.arch }}.dmg"
+          ditto -c -k --keepParent "dist/Börse EC Thun.app" "dist/Boerse-EC-Thun-${{ matrix.arch }}.zip"
+          # Installationsfenster: Hintergrund mit Pfeil (für normale und Retina-Bildschirme), feste Symbol-Plätze
+          tiffutil -cathidpicheck scripts/dmg/background.png scripts/dmg/background@2x.png -out "$RUNNER_TEMP/background.tiff"
+          pip install dmgbuild
+          dmgbuild -s scripts/dmg_settings.py -D app="dist/Börse EC Thun.app" -D background="$RUNNER_TEMP/background.tiff" "Börse EC Thun" "dist/Boerse-EC-Thun-${{ matrix.arch }}.dmg"
       - name: Signatur nach dem Auspacken prüfen
         run: |
           mkdir -p "$RUNNER_TEMP/zip" && ditto -x -k "dist/Boerse-EC-Thun-${{ matrix.arch }}.zip" "$RUNNER_TEMP/zip"

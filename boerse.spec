@@ -8,7 +8,7 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 NAME = "Börse EC Thun"
 VERSION = re.search(r'__version__ = "(.+)"', Path("boerse/__init__.py").read_text(encoding="utf-8")).group(1)
-ICON = "inventar/assets/logo-ec-thun.png"
+ICON = "inventar/assets/app-icon.png"
 
 
 def without_extras(name: str) -> bool:

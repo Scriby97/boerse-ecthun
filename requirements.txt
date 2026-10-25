@@ -1,5 +1,5 @@
 Django>=5.2,<5.3
-numbers-parser>=4.22
+numbers-parser>=4.19
 openpyxl>=3.1
 waitress>=3.0
 whitenoise>=6.8

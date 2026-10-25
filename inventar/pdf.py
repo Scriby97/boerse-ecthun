@@ -29,7 +29,7 @@ def receipt_pdf(sale: Sale, settings: AppSettings | None = None) -> bytes:
     """Kaufquittung (A5): Logo, «Börse EC Thun», Posten ohne Artikelnummer, Total, Dankestext, Name, Datum."""
     settings = settings or AppSettings.load()
     pdf = FPDF(format=(148, 210))  # A5 hoch
-    pdf.set_title(latin1(f"Quittung {sale.number} - Börse EC Thun"))
+    pdf.set_title(latin1(f"Quittung {sale.date:%d.%m.%Y} - Börse EC Thun"))
     pdf.set_author(latin1(settings.owner_name))
     pdf.set_margins(14, 12, 14)
     pdf.set_auto_page_break(True, margin=16)
@@ -46,7 +46,7 @@ def receipt_pdf(sale: Sale, settings: AppSettings | None = None) -> bytes:
     pdf.cell(0, 6, "Quittung", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.set_text_color(*MUTED)
     pdf.set_font("Helvetica", "", 9)
-    pdf.cell(0, 5, latin1(f"Nr. {sale.number} · {sale.date:%d.%m.%Y}"), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 5, latin1(f"{sale.date:%d.%m.%Y}"), align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(5)
 
     pdf.set_text_color(*INK)

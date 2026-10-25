@@ -162,3 +162,19 @@ class SaleBuyerTests(TestCase):
         sale.refresh_from_db()
         self.assertEqual(sale.buyer, anna)
         self.assertEqual(Person.objects.filter(name="Neu Nina").count(), 1)
+
+
+class ReceiptWithoutNumberTests(TestCase):
+    def test_keine_quittungsnummer_auf_der_quittung(self):
+        import re
+        import zlib
+
+        from inventar import sales
+        from inventar.pdf import receipt_pdf
+        for _ in range(3):
+            sale = sales.create_sale([{"kind": "eigen", "description": "Band", "price": "2.00"}])
+        pdf = receipt_pdf(sale)
+        text = b"".join(zlib.decompress(m) for m in re.findall(rb"stream\r?\n(.*?)\r?\nendstream", pdf, re.S)
+                        if m[:2] in (b"x\x9c", b"x\xda"))
+        self.assertNotIn(b"Nr. 3", text)
+        self.assertIn(sale.date.strftime("%d.%m.%Y").encode(), text)
